@@ -1,11 +1,52 @@
-import pygame, csv
+import pygame, csv, random
 from pygame import Vector2
 import classes
 import ui.menu
 
-def draw_level(world: int, level: int) -> None:
-    #level_file = f"{world}/{level}.csv"
-    pass
+def create_object(new_object: classes.Sprite, position: Vector2, size: Vector2, renderer: classes.Renderer):
+    if type(new_object) != classes.AnimatableSprite: new_object.load()
+    new_object.position = position
+    new_object.size = size
+    renderer.objects.append(new_object)
+
+def draw_level(world: int, level: int, room: int, renderer: classes.Renderer) -> None:
+    roomArray: list[list[str]] = []
+
+    # Open the file
+    level_file = f"worlds/{world}/l{level}/r{room}.csv"
+    file = open(level_file, "r")
+    reader = csv.reader(file)
+    
+    for row in reader:
+        roomArray.append(row)
+
+    file.close()
+    # Generate level
+
+    x = 0
+    y = 0
+
+    for row in roomArray:
+        for cell in row:
+            cell.split("_")
+
+            if "g" in cell:
+                randomInt = random.randint(1, 20)
+                if randomInt >= 6: randomInt = 4
+                if randomInt == 5:
+                    create_object(classes.Sprite(f"assets/images/level_blocks/plant/plant-{random.randint(1, 3)}.png"), Vector2(x, y), Vector2(30, 30), renderer)
+                else:
+                    create_object(classes.Sprite(f"assets/images/level_blocks/grass/grass-{randomInt}.png"), Vector2(x, y), Vector2(30, 30), renderer)
+
+                # Additional objects
+                if "cn" in cell:
+                    create_object(classes.AnimatableSprite({"idle": "assets/images/misc/coins.png"}, {"idle": 5}, 16), Vector2(x, y), Vector2(25, 25), renderer)
+
+            x += 30 # Add to x value after each block is loaded.
+        # Reset x value and add to y value after each row is loaded.
+        x = 0
+        y += 30
+    
 
 def draw_menu(renderer: classes.Renderer, menu_page: int):
     level_array: list[list[str]] = []
@@ -32,11 +73,10 @@ def draw_menu(renderer: classes.Renderer, menu_page: int):
             if block == "G": # Grass Block
                 # Check if grass block is underneath another grass block
                 if level_array[y_array - 1][x_array] == "G":
-                    new_block = classes.PhysicsObject("assets/images/level_blocks/dirt.png")
+                    new_block = classes.Sprite("assets/images/level_blocks/dirt.png")
                 else:
-                    new_block = classes.PhysicsObject("assets/images/level_blocks/grass.png")
+                    new_block = classes.Sprite("assets/images/level_blocks/grass.png")
                 new_block.load()
-                new_block.anchored = True
                 new_block.position = Vector2(x, y)
                 new_block.size = Vector2(45, 45)
                 renderer.objects.append(new_block)
@@ -55,9 +95,38 @@ def draw_menu(renderer: classes.Renderer, menu_page: int):
     # Draw buttons depending on page
     renderer.objects.append(ui.menu.title)
 
+def draw_coins(renderer: classes.Renderer, stats: classes.GameStats):
 
+    coin_symbol = classes.Sprite("assets/images/misc/coin.png")
+    coin_symbol.position = Vector2(600, 710)
+    coin_symbol.size = Vector2(25, 25)
+    coin_symbol.load()
+    coin_symbol.draw(renderer.screen)
+
+    font = pygame.font.SysFont("Arial", 20)
+    text = font.render(str(stats.coins), False, (255, 159, 0))
+    renderer.screen.blit(text, (630, 715))
+
+def draw_lives(renderer: classes.Renderer, player: classes.Player):
+    x = 20
+
+    if player.lives <= 0:
+        font = pygame.font.SysFont('Arial', 20)
+        text = font.render('Game Over! Press [SPACE] to restart', False, (0, 0, 0))
+        renderer.screen.blit(text, (x,710))
+    else:
+        for _ in range(player.lives):
+            new_life = classes.Sprite("assets/images/misc/icon_heart.png")
+            new_life.position = Vector2(x, 710)
+            new_life.size = Vector2(25, 25)
+            new_life.load()
+            new_life.draw(renderer.screen)
+            x += 50
+
+
+stats: classes.GameStats = classes.GameStats(0)
 player: classes.Player = classes.Player("assets/images/player/player.png")
-player_spawn = Vector2(50, 20)
+player_spawn = Vector2(1300/2, 750/2)
 
 def main() -> None:
     
@@ -67,45 +136,49 @@ def main() -> None:
     clock = pygame.time.Clock()
     running: bool = True
 
+    # GAME VARIABLES
+    #menu_active: bool = True
+    #menu_page: int = 1
+
+    world = 1
+    level = 1
+    room = 1
+
+    draw_level(world, level, room, renderer)
+
     player.load()
     renderer.objects.append(player)
-
-    # GAME VARIABLES
-    menu_active: bool = True
-    menu_page: int = 1
     
 
     # GAME LOOP
     while running:
         delta_time = clock.tick()
         renderer.screen.fill((215, 252, 252)) # Default background colour
-        key_pressed = pygame.key.get_pressed()
 
-        if key_pressed[pygame.K_w]:
-            pass
-        if key_pressed[pygame.K_s]:
-            pass
-        if key_pressed[pygame.K_a]:
-            player.move(Vector2(-0.3, 0) * delta_time) 
-        if key_pressed[pygame.K_d]:
-            player.move(Vector2(0.3, 0) * delta_time)
+        draw_lives(renderer, player)
+        draw_coins(renderer, stats)
 
-        if key_pressed[pygame.K_SPACE]:
-            player.move(Vector2(0, -0.5) * delta_time)
-
-        player.update(renderer.objects)
         # Detect if the pygame console has been quit.
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
-            if menu_active:
-                # MENU LOGIC
-                draw_menu(renderer, menu_page)
+        # Detect key pressed
+        key_pressed = pygame.key.get_pressed()
 
+        if key_pressed[pygame.K_w]:
+            player.move(Vector2(0, -0.3) * delta_time) 
+        if key_pressed[pygame.K_s]:
+            player.move(Vector2(0, 0.3) * delta_time) 
+        if key_pressed[pygame.K_a]:
+            player.move(Vector2(-0.3, 0) * delta_time) 
+        if key_pressed[pygame.K_d]:
+            player.move(Vector2(0.3, 0) * delta_time)
         
         renderer.update()
         pygame.display.flip()
 
 if __name__ == "__main__":
     main()
+
+pygame.quit()
