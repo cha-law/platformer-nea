@@ -40,7 +40,7 @@ def draw_level(world: int, level: int, room: int, renderer: classes.Renderer) ->
 
                 # Additional objects
                 if "cn" in cell:
-                    create_object(classes.AnimatableSprite({"idle": "assets/images/misc/coins.png"}, {"idle": 5}, 16), Vector2(x, y), Vector2(25, 25), renderer)
+                    create_object(classes.AnimatableSprite({"idle": "assets/images/misc/coins.png"}, {"idle": 5}, 16, False, "coin"), Vector2(x, y), Vector2(25, 25), renderer)
 
             x += 30 # Add to x value after each block is loaded.
         # Reset x value and add to y value after each row is loaded.
@@ -98,14 +98,14 @@ def draw_menu(renderer: classes.Renderer, menu_page: int):
 def draw_coins(renderer: classes.Renderer, stats: classes.GameStats):
 
     coin_symbol = classes.Sprite("assets/images/misc/coin.png")
-    coin_symbol.position = Vector2(600, 710)
+    coin_symbol.position = Vector2(1150, 710)
     coin_symbol.size = Vector2(25, 25)
     coin_symbol.load()
     coin_symbol.draw(renderer.screen)
 
-    font = pygame.font.SysFont("Arial", 20)
-    text = font.render(str(stats.coins), False, (255, 159, 0))
-    renderer.screen.blit(text, (630, 715))
+    font = pygame.font.Font("assets/fonts/pixel.ttf", 35)
+    text = font.render(str(stats.coins), False, (200, 156, 4))
+    renderer.screen.blit(text, (1185, 705))
 
 def draw_lives(renderer: classes.Renderer, player: classes.Player):
     x = 20
@@ -123,15 +123,48 @@ def draw_lives(renderer: classes.Renderer, player: classes.Player):
             new_life.draw(renderer.screen)
             x += 50
 
+def is_colliding(obj1: classes.RenderableObject, obj2: classes.RenderableObject) -> bool:
+    return (
+        obj1.position.x < obj2.position.x + obj2.size.x and
+        obj1.position.x + obj1.size.x > obj2.position.x and
+        obj1.position.y < obj2.position.y + obj2.size.y and
+        obj1.position.y + obj1.size.y > obj2.position.y
+    )
+
+def get_collisions(renderer: classes.Renderer, player: classes.Player):
+    collisions_list: list[classes.RenderableObject] = []
+
+    for object in renderer.objects:
+        if is_colliding(player, object):
+            collisions_list.append(object)
+
+    return collisions_list
+
+player_images = {
+    "idle": "assets/images/player/idle.png",
+    "walk": "assets/images/player/walk.png",
+    "attack": "assets/images/player/attack.png",
+    "block": "assets/images/player/block.png",
+    "dead": "assets/images/player/dead.png",
+}
+
+player_num_frames = {
+    "idle": 5,
+    "walk": 8,
+    "attack": 6,
+    "block": 2,
+    "dead": 7
+}
 
 stats: classes.GameStats = classes.GameStats(0)
-player: classes.Player = classes.Player("assets/images/player/player.png")
+player: classes.Player = classes.Player(player_images, player_num_frames)
 player_spawn = Vector2(1300/2, 750/2)
 
 def main() -> None:
     
     # PYGAME SETUP
     pygame.init()
+    pygame.mixer.init()
     renderer = classes.Renderer()
     clock = pygame.time.Clock()
     running: bool = True
@@ -145,8 +178,6 @@ def main() -> None:
     room = 1
 
     draw_level(world, level, room, renderer)
-
-    player.load()
     renderer.objects.append(player)
     
 
@@ -154,6 +185,8 @@ def main() -> None:
     while running:
         delta_time = clock.tick()
         renderer.screen.fill((215, 252, 252)) # Default background colour
+
+        player.playing = "idle"
 
         draw_lives(renderer, player)
         draw_coins(renderer, stats)
@@ -165,15 +198,28 @@ def main() -> None:
 
         # Detect key pressed
         key_pressed = pygame.key.get_pressed()
+        #mouse_pressed = pygame.mouse.get_pressed()
 
         if key_pressed[pygame.K_w]:
-            player.move(Vector2(0, -0.3) * delta_time) 
+            player.move(Vector2(0, -0.15) * delta_time) 
         if key_pressed[pygame.K_s]:
-            player.move(Vector2(0, 0.3) * delta_time) 
+            player.move(Vector2(0, 0.15) * delta_time) 
         if key_pressed[pygame.K_a]:
-            player.move(Vector2(-0.3, 0) * delta_time) 
+            player.move(Vector2(-0.2, 0) * delta_time) 
         if key_pressed[pygame.K_d]:
-            player.move(Vector2(0.3, 0) * delta_time)
+            player.move(Vector2(0.2, 0) * delta_time)
+
+        player.update_frame()
+
+        object_collisions: list[classes.RenderableObject] = get_collisions(renderer, player)
+
+        for object in object_collisions:
+            if type(object) == classes.Sprite or type(object) == classes.AnimatableSprite:
+
+                if object.object_type == "coin":
+                    stats.add_coin()
+                    pygame.mixer.Sound("assets/sound/coin.mp3").play().set_volume(0.05)
+                    renderer.objects.remove(object) # type:ignore
         
         renderer.update()
         pygame.display.flip()

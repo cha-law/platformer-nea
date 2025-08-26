@@ -11,6 +11,9 @@ class GameStats():
     def __init__(self, coins: int):
         self.coins = coins
 
+    def add_coin(self):
+        self.coins += 1
+
 class Renderer():
     def __init__(self, screen_size: Vector2 = Vector2(1300, 750)):
         self.objects: List[RenderableObject] = []
@@ -50,11 +53,13 @@ class MenuButton(Text):
         self.page = page
 
 class Sprite(RenderableObject):
-    def __init__(self, image: str):
+    def __init__(self, image: str, object_type: str = "x"):
         super().__init__()
         self.surface = Surface(self.size)
         self.z_index = 1
         self.image: Optional[str] = image
+        self.direction = 1
+        self.object_type = object_type
     
     def load(self):
         if self.image == None:
@@ -68,8 +73,9 @@ class Sprite(RenderableObject):
 
     def flip(self):
         self.surface = pygame.transform.flip(self.surface, True, False)
+        self.direction *= -1
 
-def extract_frames(images: dict[str, str], frame_size: int, num_frames: dict[str, int]) -> dict[str, List[Surface]]:
+def extract_frames(images: dict[str, str], frame_size: int, num_frames: dict[str, int], crop: bool) -> dict[str, List[Surface]]:
     seperated_images: dict[str, List[Surface]] = {}
 
     for anim in images: # Loop through each type of animation
@@ -78,8 +84,13 @@ def extract_frames(images: dict[str, str], frame_size: int, num_frames: dict[str
 
         array_frames: List[Surface] = [] # Create a new array for the surface of each frame
 
-        for i in range(num_frames[anim] - 1): # Loop for the number of frames that animation has
-            array_frames.append(loaded_image.subsurface(pygame.Rect(i * frame_size, 0, frame_size, frame_size)) ) # type: ignore
+        for i in range(num_frames[anim]): # Loop for the number of frames that animation has
+            current_img = loaded_image.subsurface(pygame.Rect(i * frame_size, 0, frame_size, frame_size)) # type: ignore
+            if crop:
+                final_img = current_img.subsurface(pygame.Rect(frame_size * 0.35, frame_size * 0.35, frame_size * 0.5, frame_size * 0.5))
+                array_frames.append(final_img) # type: ignore
+            else:
+                array_frames.append(current_img) # type: ignore
 
         seperated_images[anim] = array_frames
 
@@ -87,15 +98,15 @@ def extract_frames(images: dict[str, str], frame_size: int, num_frames: dict[str
 
 
 class AnimatableSprite(Sprite):
-    def __init__(self, images: dict[str, str], num_frames: dict[str, int], frame_size: int = 64):
-        super().__init__("")
-        self.frames = extract_frames(images, frame_size, num_frames)
+    def __init__(self, images: dict[str, str], num_frames: dict[str, int], frame_size: int = 64, crop: bool = False, object_type: str = "x"):
+        super().__init__("", object_type)
+        self.frames = extract_frames(images, frame_size, num_frames, crop)
         self.current_frame = 0 # Current frame
         self.dict_num_frames = num_frames # The amount of frames each image has.
         self.frame_size = frame_size # Size of each frame
         self.playing = "idle" # The animation currently being played
         self.num_frames = self.dict_num_frames["idle"] # The number of frames in the current animation.
-        self.fps = 10 # Frames per second for the animation
+        self.fps = 8 # Frames per second for the animation
 
     def change_animation(self, new_anim: str):
         self.playing = new_anim
@@ -106,22 +117,16 @@ class AnimatableSprite(Sprite):
         self.current_frame: int = int((time.time() - start_time) * self.fps % self.dict_num_frames[self.playing]) # type: ignore
         if self.current_frame >= len(self.frames[self.playing]): self.current_frame = 0
 
-        self.surface = self.frames[self.playing][self.current_frame]
+        if self.direction == -1:
+            self.surface = pygame.transform.flip(self.frames[self.playing][self.current_frame], True, False)
+        else:
+            self.surface = self.frames[self.playing][self.current_frame]
 
-
-def is_colliding(obj1: "Sprite", obj2: "Sprite") -> bool:
-    return (
-        obj1.position.x < obj2.position.x + obj2.size.x and
-        obj1.position.x + obj1.size.x > obj2.position.x and
-        obj1.position.y < obj2.position.y + obj2.size.y and
-        obj1.position.y + obj1.size.y > obj2.position.y
-    )
-
-class Player(Sprite):
-    def __init__(self, image: str):
-        super().__init__(image)
+class Player(AnimatableSprite):
+    def __init__(self, images: dict[str, str], dict_num_frames: dict[str, int], frame_size: int = 64):
+        super().__init__(images, dict_num_frames, frame_size, True)
         self.lives = 3
-        self.size = Vector2(30,30)
+        self.size = Vector2(40,40)
 
     def move(self, move: Vector2):
         if self.lives > 0:
@@ -133,6 +138,10 @@ class Player(Sprite):
 
             if self.position.y <= 0: self.position.y = 0
             elif self.position.y + self.size.y >= 690: self.position.y = 690 - self.size.y
+
+            if self.direction * move.x < 0: self.direction *= -1
+
+            self.playing = "walk"
 
     def setLives(self, life_multiplier: int):
         self.lives += life_multiplier
