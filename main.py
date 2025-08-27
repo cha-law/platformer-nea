@@ -1,5 +1,5 @@
 from typing import Any
-import pygame, csv, random
+import pygame, csv, random, time
 from pygame import Vector2
 import classes
 import ui.menu
@@ -117,7 +117,7 @@ def draw_lives(renderer: classes.Renderer, player: classes.Player):
     x = 20
 
     if player.lives <= 0:
-        font = pygame.font.SysFont('Arial', 20)
+        font = pygame.font.Font('assets/fonts/pixel.ttf', 20)
         text = font.render('Game Over! Press [SPACE] to restart', False, (0, 0, 0))
         renderer.screen.blit(text, (x,710))
     else:
@@ -151,6 +151,7 @@ player_images = {
     "walk": "assets/images/player/walk.png",
     "attack": "assets/images/player/attack.png",
     "block": "assets/images/player/block.png",
+    "damage": "assets/images/player/damage.png",
     "dead": "assets/images/player/dead.png",
 }
 
@@ -159,6 +160,7 @@ player_num_frames = {
     "walk": 8,
     "attack": 6,
     "block": 2,
+    "damage": 1,
     "dead": 7
 }
 
@@ -187,6 +189,7 @@ def main() -> None:
     renderer.objects.append(player)
 
     cooldown_timer = 0
+    dead_time = None
 
     # GAME LOOP
     while running:
@@ -221,6 +224,7 @@ def main() -> None:
             player.position = Vector2(0, 0)
             player.lives = 3
             player.dead = False
+            dead_time = None
 
 
         object_collisions: list[classes.RenderableObject] = get_collisions(renderer, player)
@@ -235,6 +239,7 @@ def main() -> None:
 
                 if object.object_type == "enemy" and not player.cooldown:
                     player.setLives(-1)
+                    player.change_animation("damage")
                     pygame.mixer.Sound("assets/sound/hurt.mp3").play().set_volume(0.3)
                     player.cooldown = True
                     cooldown_timer = 0
@@ -247,8 +252,14 @@ def main() -> None:
         # Check if player is dead
         if player.lives <= 0:
             player.dead = True
-            player.position = Vector2(0, 0)
-            if player in renderer.objects: renderer.objects.remove(player) 
+            player.change_animation("dead")
+
+            if not dead_time:
+                dead_time = time.time()
+            else:
+                if time.time() - dead_time >= 0.4 and player in renderer.objects:
+                    player.position = Vector2(0, 0)
+                    renderer.objects.remove(player)
 
 
         cooldown_timer += 1
