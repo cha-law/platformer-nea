@@ -134,6 +134,8 @@ class Player(AnimatableSprite):
         super().__init__(images, dict_num_frames, frame_size, True)
         self.lives = 3
         self.size = Vector2(40,40)
+        self.cooldown = False
+        self.dead = False
 
     def move(self, move: Vector2):
         if self.lives > 0:
@@ -149,6 +151,7 @@ class Player(AnimatableSprite):
             if self.direction * move.x < 0: self.direction *= -1
 
             self.playing = "walk"
+            
 
     def setLives(self, life_multiplier: int):
         self.lives += life_multiplier

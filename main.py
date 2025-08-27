@@ -186,6 +186,8 @@ def main() -> None:
     draw_level(world, level, room, renderer)
     renderer.objects.append(player)
 
+    cooldown_timer = 0
+
     # GAME LOOP
     while running:
         delta_time = clock.tick()
@@ -214,6 +216,12 @@ def main() -> None:
         if key_pressed[pygame.K_d]:
             player.move(Vector2(0.2, 0) * delta_time)
 
+        if key_pressed[pygame.K_SPACE] and player.dead:
+            renderer.objects.append(player)
+            player.position = Vector2(0, 0)
+            player.lives = 3
+            player.dead = False
+
 
         object_collisions: list[classes.RenderableObject] = get_collisions(renderer, player)
 
@@ -222,12 +230,28 @@ def main() -> None:
 
                 if object.object_type == "coin":
                     stats.add_coin()
-                    pygame.mixer.Sound("assets/sound/coin.mp3").play().set_volume(0.05)
+                    pygame.mixer.Sound("assets/sound/coin.mp3").play().set_volume(0.03)
                     renderer.objects.remove(object) # type:ignore
 
-                if object.object_type == "enemy":
+                if object.object_type == "enemy" and not player.cooldown:
                     player.setLives(-1)
-                    pygame.mixer.Sound("assets/sound/hurt.mp3").play().set_volume(0.5)
+                    pygame.mixer.Sound("assets/sound/hurt.mp3").play().set_volume(0.3)
+                    player.cooldown = True
+                    cooldown_timer = 0
+
+        # Check the player cooldown
+        if cooldown_timer >= 100: 
+            cooldown_timer = 0
+            player.cooldown = False
+
+        # Check if player is dead
+        if player.lives <= 0:
+            player.dead = True
+            player.position = Vector2(0, 0)
+            if player in renderer.objects: renderer.objects.remove(player) 
+
+
+        cooldown_timer += 1
         
         renderer.update()
         pygame.display.flip()
