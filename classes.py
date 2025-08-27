@@ -23,8 +23,11 @@ class Renderer():
     def update(self):
         for sprite in self.objects:
             # Update frame if sprite is animated
-            if type(sprite) == AnimatableSprite:
+            if isinstance(sprite, AnimatableSprite):
                 sprite.update_frame()
+
+                if isinstance(sprite, Enemy):
+                    sprite.update_movement()
 
             sprite.draw(self.screen)     
 
@@ -53,7 +56,7 @@ class MenuButton(Text):
         self.page = page
 
 class Sprite(RenderableObject):
-    def __init__(self, image: str, object_type: str = "x"):
+    def __init__(self, image: str, object_type: str = "x", z_index: int = 1):
         super().__init__()
         self.surface = Surface(self.size)
         self.z_index = 1
@@ -75,31 +78,9 @@ class Sprite(RenderableObject):
         self.surface = pygame.transform.flip(self.surface, True, False)
         self.direction *= -1
 
-def extract_frames(images: dict[str, str], frame_size: int, num_frames: dict[str, int], crop: bool) -> dict[str, List[Surface]]:
-    seperated_images: dict[str, List[Surface]] = {}
-
-    for anim in images: # Loop through each type of animation
-        # Load each image
-        loaded_image = pygame.image.load(images[anim])
-
-        array_frames: List[Surface] = [] # Create a new array for the surface of each frame
-
-        for i in range(num_frames[anim]): # Loop for the number of frames that animation has
-            current_img = loaded_image.subsurface(pygame.Rect(i * frame_size, 0, frame_size, frame_size)) # type: ignore
-            if crop:
-                final_img = current_img.subsurface(pygame.Rect(frame_size * 0.35, frame_size * 0.35, frame_size * 0.5, frame_size * 0.5))
-                array_frames.append(final_img) # type: ignore
-            else:
-                array_frames.append(current_img) # type: ignore
-
-        seperated_images[anim] = array_frames
-
-    return seperated_images
-
-
 class AnimatableSprite(Sprite):
-    def __init__(self, images: dict[str, str], num_frames: dict[str, int], frame_size: int = 64, crop: bool = False, object_type: str = "x"):
-        super().__init__("", object_type)
+    def __init__(self, images: dict[str, str], num_frames: dict[str, int], frame_size: int = 64, crop: bool = False, object_type: str = "x", z_index: int = 1):
+        super().__init__("", object_type, z_index)
         self.frames = extract_frames(images, frame_size, num_frames, crop)
         self.current_frame = 0 # Current frame
         self.dict_num_frames = num_frames # The amount of frames each image has.
@@ -121,6 +102,32 @@ class AnimatableSprite(Sprite):
             self.surface = pygame.transform.flip(self.frames[self.playing][self.current_frame], True, False)
         else:
             self.surface = self.frames[self.playing][self.current_frame]
+
+class Enemy(AnimatableSprite):
+    def __init__(self, images: dict[str, str], num_frames: dict[str, int], frame_size: int = 64, crop: bool = False, object_type: str = "x", z_index: int = 1):
+        super().__init__(images, num_frames, frame_size, crop, object_type, z_index)
+        self.lives = 3
+
+    def update_movement(self):
+        ...
+
+class Small_Zombie(Enemy):
+    def __init__(self, images: dict[str, str], num_frames: dict[str, int], frame_size: int = 64, crop: bool = False, object_type: str = "x", z_index: int = 1):
+        super().__init__(images, num_frames, frame_size, crop, object_type, z_index)
+        self.lives = 3
+        self.speed = 0.5
+        self.steps = 0
+
+    def update_movement(self):
+        self.position.x += (self.speed * self.direction)
+        self.steps += (self.direction * self.speed)
+
+        if self.steps >= 40:
+            self.direction = -1
+        
+        if self.steps <= -40:
+            self.direction = 1
+
 
 class Player(AnimatableSprite):
     def __init__(self, images: dict[str, str], dict_num_frames: dict[str, int], frame_size: int = 64):
@@ -151,3 +158,37 @@ class ButtonComponent(Sprite):
     def __init__(self, image: str):
         super().__init__(image)
         self.active = False  
+
+
+
+
+# FUNCTIONS
+
+def is_colliding(obj1: RenderableObject, obj2: RenderableObject) -> bool:
+    return (
+        obj1.position.x < obj2.position.x + obj2.size.x and
+        obj1.position.x + obj1.size.x > obj2.position.x and
+        obj1.position.y < obj2.position.y + obj2.size.y and
+        obj1.position.y + obj1.size.y > obj2.position.y
+    )
+
+def extract_frames(images: dict[str, str], frame_size: int, num_frames: dict[str, int], crop: bool) -> dict[str, List[Surface]]:
+    seperated_images: dict[str, List[Surface]] = {}
+
+    for anim in images: # Loop through each type of animation
+        # Load each image
+        loaded_image = pygame.image.load(images[anim])
+
+        array_frames: List[Surface] = [] # Create a new array for the surface of each frame
+
+        for i in range(num_frames[anim]): # Loop for the number of frames that animation has
+            current_img = loaded_image.subsurface(pygame.Rect(i * frame_size, 0, frame_size, frame_size)) # type: ignore
+            if crop:
+                final_img = current_img.subsurface(pygame.Rect(frame_size * 0.35, frame_size * 0.35, frame_size * 0.5, frame_size * 0.5))
+                array_frames.append(final_img) # type: ignore
+            else:
+                array_frames.append(current_img) # type: ignore
+
+        seperated_images[anim] = array_frames
+
+    return seperated_images

@@ -1,10 +1,11 @@
+from typing import Any
 import pygame, csv, random
 from pygame import Vector2
 import classes
 import ui.menu
 
 def create_object(new_object: classes.Sprite, position: Vector2, size: Vector2, renderer: classes.Renderer):
-    if type(new_object) != classes.AnimatableSprite: new_object.load()
+    if not isinstance(new_object, classes.AnimatableSprite): new_object.load()
     new_object.position = position
     new_object.size = size
     renderer.objects.append(new_object)
@@ -26,6 +27,8 @@ def draw_level(world: int, level: int, room: int, renderer: classes.Renderer) ->
     x = 0
     y = 0
 
+    additional_objects: list[dict[str, Any]] = []
+
     for row in roomArray:
         for cell in row:
             cell.split("_")
@@ -41,12 +44,15 @@ def draw_level(world: int, level: int, room: int, renderer: classes.Renderer) ->
                 # Additional objects
                 if "cn" in cell:
                     create_object(classes.AnimatableSprite({"idle": "assets/images/misc/coins.png"}, {"idle": 5}, 16, False, "coin"), Vector2(x, y), Vector2(25, 25), renderer)
-
+                if "smz" in cell:
+                    additional_objects.append({"object_class": classes.Small_Zombie({"idle": "assets/images/enemies/zombie/small/idle.png", "walk": "assets/images/enemies/zombie/small/walk.png", "attack": "assets/images/enemies/zombie/small/attack.png"}, {"idle": 4, "walk": 5, "attack": 4}, 32, False, "enemy", 2), "position": Vector2(x, y), "size": Vector2(30, 30), "renderer": renderer})
             x += 30 # Add to x value after each block is loaded.
         # Reset x value and add to y value after each row is loaded.
         x = 0
         y += 30
     
+    for object in additional_objects:
+        create_object(object["object_class"], object["position"], object["size"], object["renderer"]) # type: ignore
 
 def draw_menu(renderer: classes.Renderer, menu_page: int):
     level_array: list[list[str]] = []
@@ -179,7 +185,6 @@ def main() -> None:
 
     draw_level(world, level, room, renderer)
     renderer.objects.append(player)
-    
 
     # GAME LOOP
     while running:
@@ -209,17 +214,20 @@ def main() -> None:
         if key_pressed[pygame.K_d]:
             player.move(Vector2(0.2, 0) * delta_time)
 
-        player.update_frame()
 
         object_collisions: list[classes.RenderableObject] = get_collisions(renderer, player)
 
         for object in object_collisions:
-            if type(object) == classes.Sprite or type(object) == classes.AnimatableSprite:
+            if isinstance(object, classes.Sprite):
 
                 if object.object_type == "coin":
                     stats.add_coin()
                     pygame.mixer.Sound("assets/sound/coin.mp3").play().set_volume(0.05)
                     renderer.objects.remove(object) # type:ignore
+
+                if object.object_type == "enemy":
+                    player.setLives(-1)
+                    pygame.mixer.Sound("assets/sound/hurt.mp3").play().set_volume(0.5)
         
         renderer.update()
         pygame.display.flip()
