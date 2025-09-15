@@ -31,10 +31,13 @@ def draw_level(world: int, level: int, room: int, renderer: classes.Renderer) ->
 
     for row in roomArray:
         for cell in row:
-            cell.split("_")
+            objects = cell.split("_")
 
-            if "g" in cell:
-                randomInt = random.randint(1, 20)
+            if "dg" in objects:
+                create_object(classes.Sprite("assets/images/level_blocks/grass/grass-4.png"), Vector2(x, y), Vector2(30, 30), renderer)
+
+            if "g" in objects:
+                randomInt = random.randint(1, 12)
                 if randomInt >= 6: randomInt = 4
                 if randomInt == 5:
                     create_object(classes.Sprite(f"assets/images/level_blocks/plant/plant-{random.randint(1, 3)}.png"), Vector2(x, y), Vector2(30, 30), renderer)
@@ -42,10 +45,28 @@ def draw_level(world: int, level: int, room: int, renderer: classes.Renderer) ->
                     create_object(classes.Sprite(f"assets/images/level_blocks/grass/grass-{randomInt}.png"), Vector2(x, y), Vector2(30, 30), renderer)
 
                 # Additional objects
-                if "cn" in cell:
-                    create_object(classes.AnimatableSprite({"idle": "assets/images/misc/coins.png"}, {"idle": 5}, 16, False, "coin"), Vector2(x, y), Vector2(25, 25), renderer)
-                if "smz" in cell:
+
+                if "rk" in objects:
+                    create_object(classes.Sprite(f"assets/images/level_blocks/decor/rock-{random.randint(1,2)}.png", "rock", 1, True), Vector2(x, y), Vector2(30, 30), renderer)
+                if "smz" in objects:
                     additional_objects.append({"object_class": classes.Small_Zombie({"idle": "assets/images/enemies/zombie/small/idle.png", "walk": "assets/images/enemies/zombie/small/walk.png", "attack": "assets/images/enemies/zombie/small/attack.png"}, {"idle": 4, "walk": 5, "attack": 4}, 32, False, "enemy", 2), "position": Vector2(x, y), "size": Vector2(30, 30), "renderer": renderer})
+                if "tr-sm" in objects:
+                    additional_objects.append({"object_class": classes.Sprite("assets/images/level_blocks/tree/tree-sm.png", "tree", 1, True), "position": Vector2(x, y), "size": Vector2(30, 60), "renderer": renderer})
+                if "tr-lg" in objects:
+                    additional_objects.append({"object_class": classes.Sprite("assets/images/level_blocks/tree/tree-lg.png", "tree", 1, True), "position": Vector2(x, y), "size": Vector2(60, 60), "renderer": renderer})
+            
+            if "cn" in objects:
+                additional_objects.append({"object_class": classes.AnimatableSprite({"idle": "assets/images/misc/coins.png"}, {"idle": 5}, 16, False, "coin"), "position": Vector2(x, y), "size": Vector2(25, 25), "renderer": renderer})
+
+            if "fence" in objects:
+                additional_objects.append({"object_class": classes.Sprite("assets/images/level_blocks/fences/fence.png", "fence", 1, True), "position": Vector2(x, y), "size": Vector2(30, 30), "renderer": renderer})
+
+            if "exit" in objects:
+                additional_objects.append({"object_class": classes.AnimatableSprite({"idle": "assets/images/misc/arrow.png"}, {"idle": 2}, 32, False, "exit"), "position": Vector2(x, y), "size": Vector2(30, 30), "renderer": renderer})
+
+            if "spawn" in objects:
+                spawn.set_spawn(Vector2(x, y))   
+            
             x += 30 # Add to x value after each block is loaded.
         # Reset x value and add to y value after each row is loaded.
         x = 0
@@ -137,11 +158,30 @@ def is_colliding(obj1: classes.RenderableObject, obj2: classes.RenderableObject)
         obj1.position.y + obj1.size.y > obj2.position.y
     )
 
+def is_player_colliding(plr: classes.Player, obj2: classes.RenderableObject) -> None:
+    if is_player_colliding_left(plr, obj2): 
+        plr.position.x = obj2.position.x - plr.size.x - 20
+        print("left")
+    if is_player_colliding_right(plr, obj2): 
+        plr.position.x = obj2.position.x + obj2.size.x + 20
+        print("right")
+    if is_player_colliding_top(plr, obj2): 
+        plr.position.y = obj2.position.y - plr.size.y
+        print("top")
+    if is_player_colliding_bottom(plr, obj2): 
+        plr.position.y = obj2.position.y + obj2.size.y
+        print("bottom")
+
+def is_player_colliding_left(obj1: classes.Player, obj2: classes.RenderableObject) -> bool: return obj1.position.x + 20 - 0.2 < obj2.position.x + obj2.size.x and obj1.position.x + 20 > obj2.position.x + obj2.size.x
+def is_player_colliding_right(obj1: classes.Player, obj2: classes.RenderableObject) -> bool: return obj1.position.x + obj1.size.x - 20 + 0.2 > obj2.position.x and obj1.position.x + obj1.size.x - 20 < obj2.position.x
+def is_player_colliding_top(obj1: classes.Player, obj2: classes.RenderableObject) -> bool: return obj1.position.y - 0.2 < obj2.position.y + obj2.size.y  and obj1.position.y > obj2.position.y + obj2.size.y
+def is_player_colliding_bottom(obj1: classes.Player, obj2: classes.RenderableObject) -> bool: return obj1.position.y + obj1.size.y + 0.2 > obj2.position.y  and obj1.position.y + obj1.size.y + 0.2 < obj2.position.y
+
 def get_collisions(renderer: classes.Renderer, player: classes.Player):
     collisions_list: list[classes.RenderableObject] = []
 
     for object in renderer.objects:
-        if is_colliding(player, object):
+        if is_player_colliding(player, object):
             collisions_list.append(object)
 
     return collisions_list
@@ -166,7 +206,7 @@ player_num_frames = {
 
 stats: classes.GameStats = classes.GameStats(0)
 player: classes.Player = classes.Player(player_images, player_num_frames)
-player_spawn = Vector2(1300/2, 750/2)
+spawn: classes.Spawn = classes.Spawn()
 
 def main() -> None:
     
@@ -184,9 +224,10 @@ def main() -> None:
     world = 1
     level = 1
     room = 1
+    room_debounce = False
 
     draw_level(world, level, room, renderer)
-    renderer.objects.append(player)
+    player.position = spawn.position
 
     cooldown_timer = 0
     dead_time = None
@@ -196,7 +237,11 @@ def main() -> None:
         delta_time = clock.tick()
         renderer.screen.fill((215, 252, 252)) # Default background colour
 
-        player.playing = "idle"
+        player.change_animation("idle")
+
+        if cooldown_timer >= 100:
+            cooldown_timer = 0
+            player.cooldown = False
 
         draw_lives(renderer, player)
         draw_coins(renderer, stats)
@@ -205,27 +250,6 @@ def main() -> None:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-
-        # Detect key pressed
-        key_pressed = pygame.key.get_pressed()
-        #mouse_pressed = pygame.mouse.get_pressed()
-
-        if key_pressed[pygame.K_w]:
-            player.move(Vector2(0, -0.15) * delta_time) 
-        if key_pressed[pygame.K_s]:
-            player.move(Vector2(0, 0.15) * delta_time) 
-        if key_pressed[pygame.K_a]:
-            player.move(Vector2(-0.2, 0) * delta_time) 
-        if key_pressed[pygame.K_d]:
-            player.move(Vector2(0.2, 0) * delta_time)
-
-        if key_pressed[pygame.K_SPACE] and player.dead:
-            renderer.objects.append(player)
-            player.position = Vector2(0, 0)
-            player.lives = 3
-            player.dead = False
-            dead_time = None
-
 
         object_collisions: list[classes.RenderableObject] = get_collisions(renderer, player)
 
@@ -244,10 +268,42 @@ def main() -> None:
                     player.cooldown = True
                     cooldown_timer = 0
 
-        # Check the player cooldown
-        if cooldown_timer >= 100: 
-            cooldown_timer = 0
-            player.cooldown = False
+                if object.object_type == "exit":
+                    if not room_debounce:
+                        room += 1
+                        room_debounce = True
+                        
+                        renderer.clear()
+                        draw_level(world, level, room, renderer)
+                        player.position = spawn.position
+                        player.reload()
+
+                if object.collideable:
+                    is_player_colliding(player, object)
+
+        # Detect key pressed
+        key_pressed = pygame.key.get_pressed()
+        mouse_pressed = pygame.mouse.get_pressed()
+
+        if key_pressed[pygame.K_w]:
+            player.move(Vector2(0, -0.15) * delta_time) 
+        if key_pressed[pygame.K_s]:
+            player.move(Vector2(0, 0.15) * delta_time) 
+        if key_pressed[pygame.K_a]:
+            player.move(Vector2(-0.2, 0) * delta_time) 
+        if key_pressed[pygame.K_d]:
+            player.move(Vector2(0.2, 0) * delta_time)
+
+        if mouse_pressed[0]:
+            player.change_animation("attack")
+
+        if key_pressed[pygame.K_SPACE] and player.dead:
+            renderer.objects.append(player)
+            player.position = Vector2(0, 0)
+            player.lives = 3
+            player.dead = False
+            dead_time = None
+
 
         # Check if player is dead
         if player.lives <= 0:
@@ -261,10 +317,13 @@ def main() -> None:
                     player.position = Vector2(0, 0)
                     renderer.objects.remove(player)
 
-
         cooldown_timer += 1
         
         renderer.update()
+
+        player.update_frame()
+        player.draw(renderer.screen)
+        
         pygame.display.flip()
 
 if __name__ == "__main__":

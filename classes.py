@@ -14,6 +14,13 @@ class GameStats():
     def add_coin(self):
         self.coins += 1
 
+class Spawn:
+    def __init__(self):
+        self.position: Vector2 = Vector2(0, 0)
+
+    def set_spawn(self, new_spawn: Vector2):
+        self.position: Vector2 = new_spawn
+
 class Renderer():
     def __init__(self, screen_size: Vector2 = Vector2(1300, 750)):
         self.objects: List[RenderableObject] = []
@@ -30,6 +37,9 @@ class Renderer():
                     sprite.update_movement()
 
             sprite.draw(self.screen)     
+
+    def clear(self):
+        self.objects = []
 
 class GameObject(ABC):
     def __init__(self):
@@ -56,13 +66,14 @@ class MenuButton(Text):
         self.page = page
 
 class Sprite(RenderableObject):
-    def __init__(self, image: str, object_type: str = "x", z_index: int = 1):
+    def __init__(self, image: str, object_type: str = "x", z_index: int = 1, collideable: bool = False):
         super().__init__()
         self.surface = Surface(self.size)
         self.z_index = 1
         self.image: Optional[str] = image
         self.direction = 1
         self.object_type = object_type
+        self.collideable = collideable
     
     def load(self):
         if self.image == None:
@@ -79,8 +90,9 @@ class Sprite(RenderableObject):
         self.direction *= -1
 
 class AnimatableSprite(Sprite):
-    def __init__(self, images: dict[str, str], num_frames: dict[str, int], frame_size: int = 64, crop: bool = False, object_type: str = "x", z_index: int = 1):
-        super().__init__("", object_type, z_index)
+    def __init__(self, images: dict[str, str], num_frames: dict[str, int], frame_size: int = 64, crop: bool = False, object_type: str = "x", z_index: int = 1, collideable: bool = False):
+        super().__init__("", object_type, z_index, collideable)
+        self.images = images # Original image
         self.frames = extract_frames(images, frame_size, num_frames, crop)
         self.current_frame = 0 # Current frame
         self.dict_num_frames = num_frames # The amount of frames each image has.
@@ -88,11 +100,15 @@ class AnimatableSprite(Sprite):
         self.playing = "idle" # The animation currently being played
         self.num_frames = self.dict_num_frames["idle"] # The number of frames in the current animation.
         self.fps = 8 # Frames per second for the animation
+        self.crop = crop
 
     def change_animation(self, new_anim: str):
         self.playing = new_anim
         self.current_frame = 0 # Reset frame back to 0
         self.num_frames = self.dict_num_frames[new_anim]
+
+    def reload(self):
+        self.frames = extract_frames(self.images, self.frame_size, self.dict_num_frames, self.crop)
 
     def update_frame(self):
         self.current_frame: int = int((time.time() - start_time) * self.fps % self.dict_num_frames[self.playing]) # type: ignore
@@ -105,7 +121,7 @@ class AnimatableSprite(Sprite):
 
 class Enemy(AnimatableSprite):
     def __init__(self, images: dict[str, str], num_frames: dict[str, int], frame_size: int = 64, crop: bool = False, object_type: str = "x", z_index: int = 1):
-        super().__init__(images, num_frames, frame_size, crop, object_type, z_index)
+        super().__init__(images, num_frames, frame_size, crop, object_type, z_index, True)
         self.lives = 3
 
     def update_movement(self):
@@ -131,9 +147,9 @@ class Small_Zombie(Enemy):
 
 class Player(AnimatableSprite):
     def __init__(self, images: dict[str, str], dict_num_frames: dict[str, int], frame_size: int = 64):
-        super().__init__(images, dict_num_frames, frame_size, True)
+        super().__init__(images, dict_num_frames, frame_size, False)
         self.lives = 3
-        self.size = Vector2(40,40)
+        self.size = Vector2(80,80)
         self.cooldown = False
         self.dead = False
 
@@ -142,11 +158,11 @@ class Player(AnimatableSprite):
             self.position.x += move.x
             self.position.y += move.y
 
-            if self.position.x <= 0: self.position.x = 0
-            elif self.position.x + self.size.x >= 1300: self.position.x = 1300 - self.size.x
+            if self.position.x + 20 <= 0: self.position.x = -20
+            elif self.position.x + self.size.x - 20 >= 1300: self.position.x = 1300 - self.size.x + 20
 
-            if self.position.y <= 0: self.position.y = 0
-            elif self.position.y + self.size.y >= 690: self.position.y = 690 - self.size.y
+            if self.position.y + 20 <= 0: self.position.y = -20
+            elif self.position.y + self.size.y - 20 >= 690: self.position.y = 690 - self.size.y + 20
 
             if self.direction * move.x < 0: self.direction *= -1
 
@@ -173,6 +189,15 @@ def is_colliding(obj1: RenderableObject, obj2: RenderableObject) -> bool:
         obj1.position.x + obj1.size.x > obj2.position.x and
         obj1.position.y < obj2.position.y + obj2.size.y and
         obj1.position.y + obj1.size.y > obj2.position.y
+    )
+
+def is_player_colliding(obj1: RenderableObject, obj2: RenderableObject) -> bool:
+    # Updated collisions for the insane space outside of the character
+    return (
+        obj1.position.x + 20 < obj2.position.x + obj2.size.x and
+        obj1.position.x + obj1.size.x - 20 > obj2.position.x and
+        obj1.position.y + 20 < obj2.position.y + obj2.size.y and
+        obj1.position.y + obj1.size.y - 20 > obj2.position.y
     )
 
 def extract_frames(images: dict[str, str], frame_size: int, num_frames: dict[str, int], crop: bool) -> dict[str, List[Surface]]:
