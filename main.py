@@ -42,19 +42,21 @@ def draw_level(file_path: str, renderer: classes.Renderer) -> None:
                 else:
                     create_object(classes.Sprite(f"assets/images/level_blocks/grass/grass-{randomInt}.png"), Vector2(x, y), Vector2(30, 30), renderer)
 
-                # Additional objects
+            # Additional objects
 
-                if "rk" in objects:
-                    create_object(classes.Sprite(f"assets/images/level_blocks/decor/rock-{random.randint(1,2)}.png", "rock", 1, True), Vector2(x, y), Vector2(30, 30), renderer)
-                if "smz" in objects:
-                    additional_objects.append({"object_class": classes.Small_Zombie({"idle": "assets/images/enemies/zombie/small/idle.png", "walk": "assets/images/enemies/zombie/small/walk.png", "attack": "assets/images/enemies/zombie/small/attack.png"}, {"idle": 4, "walk": 5, "attack": 4}, Vector2(32), False, "enemy", 2), "position": Vector2(x, y), "size": Vector2(35), "renderer": renderer})
-                if "smsk" in objects:
-                    additional_objects.append({"object_class": classes.Small_Skeleton("enemy", 2), "position": Vector2(x, y), "size": Vector2(70, 35), "renderer": renderer})
-                if "tr-sm" in objects:
-                    additional_objects.append({"object_class": classes.Sprite("assets/images/level_blocks/tree/tree-sm.png", "tree", 1, True), "position": Vector2(x, y), "size": Vector2(30, 60), "renderer": renderer})
-                if "tr-lg" in objects:
-                    additional_objects.append({"object_class": classes.Sprite("assets/images/level_blocks/tree/tree-lg.png", "tree", 1, True), "position": Vector2(x, y), "size": Vector2(60, 60), "renderer": renderer})
-            
+            if "rk" in objects:
+                create_object(classes.Sprite(f"assets/images/level_blocks/decor/rock-{random.randint(1,2)}.png", "rock", 1, True), Vector2(x, y), Vector2(30, 30), renderer)
+            if "smz" in objects:
+                additional_objects.append({"object_class": classes.Small_Zombie({"idle": "assets/images/enemies/zombie/small/idle.png", "walk": "assets/images/enemies/zombie/small/walk.png", "attack": "assets/images/enemies/zombie/small/attack.png"}, {"idle": 4, "walk": 5, "attack": 4}, Vector2(32), False, "enemy", 2), "position": Vector2(x, y), "size": Vector2(35), "renderer": renderer})
+            if "smsk" in objects:
+                additional_objects.append({"object_class": classes.Small_Skeleton("enemy", 2), "position": Vector2(x, y), "size": Vector2(70, 35), "renderer": renderer})
+            if "bgsk" in objects:
+                additional_objects.append({"object_class": classes.Big_Skeleton("enemy", 2), "position": Vector2(x, y), "size": Vector2(80, 60), "renderer": renderer})
+            if "tr-sm" in objects:
+                additional_objects.append({"object_class": classes.Sprite("assets/images/level_blocks/tree/tree-sm.png", "tree", 1, True), "position": Vector2(x, y), "size": Vector2(30, 60), "renderer": renderer})
+            if "tr-lg" in objects:
+                additional_objects.append({"object_class": classes.Sprite("assets/images/level_blocks/tree/tree-lg.png", "tree", 1, True), "position": Vector2(x, y), "size": Vector2(60, 60), "renderer": renderer})
+        
             if "cn" in objects:
                 additional_objects.append({"object_class": classes.AnimatableSprite({"idle": "assets/images/misc/coins.png"}, {"idle": 5}, Vector2(16), False, "coin"), "position": Vector2(x, y), "size": Vector2(25, 25), "renderer": renderer})
 
@@ -78,9 +80,7 @@ def draw_level(file_path: str, renderer: classes.Renderer) -> None:
 def draw_menu():
     pass
 
-
 def draw_coins(renderer: classes.Renderer, stats: classes.GameStats):
-
     coin_symbol = classes.Sprite("assets/images/misc/coin.png")
     coin_symbol.position = Vector2(1150, 710)
     coin_symbol.size = Vector2(25, 25)
@@ -116,15 +116,24 @@ def is_colliding(obj1: classes.RenderableObject, obj2: classes.RenderableObject)
     )
 
 def manage_player_colliding(plr: classes.Player, obj2: classes.RenderableObject) -> None:
-    if is_colliding(plr, obj2):
-        if plr.last_move.x < 0:
-            plr.position.x = obj2.position.x + obj2.size.x - 20
-        elif plr.last_move.x > 0:
-            plr.position.x = obj2.position.x - plr.size.x + 20
-        elif plr.last_move.y < 0:
-            plr.position.y = obj2.position.y + obj2.size.y - 30
-        elif plr.last_move.y > 0:
-            plr.position.y = obj2.position.y - plr.size.y + 20
+    player_center = Vector2(player.position.x + player.size.x/2, player.position.y + player.size.y/2) 
+    object_center = Vector2(obj2.position.x + obj2.size.x/2, obj2.position.y + obj2.size.y/2)
+
+    overlap_x = (plr.size.x / 2 + obj2.size.x/2) - abs(player_center.x - object_center.x)
+    overlap_y = (plr.size.y / 2 + obj2.size.y/2) - abs(player_center.y - object_center.y)
+
+    if overlap_x < overlap_y:
+        # X-Axis
+        if player_center.x < object_center.x:
+            player.position.x -= overlap_x - 20 # move player left
+        else:
+            player.position.x += overlap_x - 20 # move player right
+    else:
+        # Y-Axis
+        if player_center.y < object_center.y:
+            player.position.y -= overlap_y - 20 # move player up
+        else:
+            player.position.y += overlap_y - 30 # move player down
 
 def get_collisions(renderer: classes.Renderer, player: classes.Player):
     collisions_list: list[classes.RenderableObject] = []

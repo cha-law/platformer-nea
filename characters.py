@@ -46,3 +46,17 @@ smallskeleton_num_frames = {
     "damage": 4,
     "attack": 6
 }
+
+bigskeleton_images = {
+    "idle": "assets/images/enemies/skeleton/big/skeleton_big_idle.png",
+    "walk": "assets/images/enemies/skeleton/big/skeleton_big_walk.png",
+    "damage": "assets/images/enemies/skeleton/big/skeleton_big_damage.png",
+    "attack": "assets/images/enemies/skeleton/big/skeleton_big_attack.png",
+}
+
+bigskeleton_num_frames = {
+    "idle": 5,
+    "walk": 8,
+    "damage": 3,
+    "attack": 8
+}

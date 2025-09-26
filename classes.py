@@ -24,7 +24,7 @@ class Spawn:
         self.position: Vector2 = new_spawn
 
 class Renderer():
-    def __init__(self, screen_size: Vector2 = Vector2(1300, 750)):
+    def __init__(self, screen_size: Vector2 = Vector2(1375, 750)):
         self.objects: List[RenderableObject] = []
         self.screen = pygame.display.set_mode(screen_size)
         self.screen_size = screen_size
@@ -36,8 +36,8 @@ class Renderer():
                 sprite.update_frame()
 
                 if isinstance(sprite, Enemy):
-                    if isinstance(sprite, Small_Skeleton): 
-                        sprite.update_movement(player)
+                    if sprite.tracking == True: 
+                        sprite.update_movement(player) # type: ignore
                     else: 
                         sprite.update_movement()
 
@@ -158,7 +158,7 @@ class Small_Skeleton(Enemy):
         self.lives = 3
         self.speed = 0.6
         self.steps = 0
-        self.range = 150
+        self.range = 175
         self.tracking = True
 
     def update_movement(self, player: "Player"): # type: ignore
@@ -182,6 +182,45 @@ class Small_Skeleton(Enemy):
         else:
             # Player is not in range
             self.speed = 0.6
+            self.position.x += (self.speed * self.direction)
+            self.steps += (self.direction * self.speed)
+            
+            if self.steps >= 40:
+                self.direction = -1
+            
+            if self.steps <= -40:
+                self.direction = 1
+
+class Big_Skeleton(Enemy):
+    def __init__(self, object_type: str = "x", z_index: int = 1):
+        super().__init__(characters.bigskeleton_images, characters.bigskeleton_num_frames, Vector2(64, 48), False, object_type, z_index)
+        self.lives = 5
+        self.speed = 0.3
+        self.steps = 0
+        self.range = 300
+        self.tracking = True
+
+    def update_movement(self, player: "Player"): # type: ignore
+        self.change_animation("walk")
+
+        player_center = Vector2(player.position.x + player.size.x/2, player.position.y + player.size.y/2) 
+        enemy_center = Vector2(self.position.x + self.size.x/2, self.position.y + self.size.y/2)
+        
+        if player_center.distance_to(enemy_center) <= self.range and not player.dead:
+            # Player is in range
+            self.speed = 0.9
+            direction = (player_center - enemy_center).normalize() # Direction to player from enemy
+            self.position.x += round(self.speed * direction.x) 
+            self.position.y += round(self.speed * direction.y)
+            
+            # Check direction
+            if direction.x < 0:
+                self.direction = -1
+            else:
+                self.direction = 1
+        else:
+            # Player is not in range
+            self.speed = 0.3
             self.position.x += (self.speed * self.direction)
             self.steps += (self.direction * self.speed)
             
