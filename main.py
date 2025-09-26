@@ -237,7 +237,7 @@ def main() -> None:
                         soundtrack.set_volume(0.03)
                     renderer.objects.remove(object) # type:ignore
 
-                if object.object_type == "enemy" and not player.cooldown:
+                if object.object_type == "enemy" and not player.cooldown and not player.dead:
                     player.setLives(-1)
                     player.change_animation("damage")
                     pygame.mixer.Sound("assets/sound/hurt.mp3").play().set_volume(0.3)

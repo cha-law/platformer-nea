@@ -156,27 +156,40 @@ class Small_Skeleton(Enemy):
     def __init__(self, object_type: str = "x", z_index: int = 1):
         super().__init__(characters.smallskeleton_images, characters.smallskeleton_num_frames, Vector2(64, 32), False, object_type, z_index)
         self.lives = 3
-        self.speed = 0.8
+        self.speed = 0.6
         self.steps = 0
-        self.range = 50
+        self.range = 150
         self.tracking = True
 
     def update_movement(self, player: "Player"): # type: ignore
         self.change_animation("walk")
-        self.position.x += (self.speed * self.direction)
-        self.steps += (self.direction * self.speed)
 
-        #player_center = Vector2(player.position.x + player.size.x/2, player.position.y + player.size.y/2) 
-        #enemy_center = Vector2(self.position.x + self.size.x/2, self.position.y + self.size.y/2)
+        player_center = Vector2(player.position.x + player.size.x/2, player.position.y + player.size.y/2) 
+        enemy_center = Vector2(self.position.x + self.size.x/2, self.position.y + self.size.y/2)
         
-        #if player_center.distance_to(enemy_center) <= self.range:
+        if player_center.distance_to(enemy_center) <= self.range and not player.dead:
+            # Player is in range
+            self.speed = 1.9
+            direction = (player_center - enemy_center).normalize() # Direction to player from enemy
+            self.position.x += round(self.speed * direction.x) 
+            self.position.y += round(self.speed * direction.y)
             
-
-        #if self.steps >= 40:
-            #self.direction = -1
-        
-        if self.steps <= -40:
-            self.direction = 1
+            # Check direction
+            if direction.x < 0:
+                self.direction = -1
+            else:
+                self.direction = 1
+        else:
+            # Player is not in range
+            self.speed = 0.6
+            self.position.x += (self.speed * self.direction)
+            self.steps += (self.direction * self.speed)
+            
+            if self.steps >= 40:
+                self.direction = -1
+            
+            if self.steps <= -40:
+                self.direction = 1
 
 class Player(AnimatableSprite):
     def __init__(self, images: dict[str, str], dict_num_frames: dict[str, int], frame_size: Vector2 = Vector2(64, 64)):
