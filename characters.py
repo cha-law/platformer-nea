@@ -60,3 +60,13 @@ bigskeleton_num_frames = {
     "damage": 3,
     "attack": 8
 }
+
+# MISC
+
+life_images = {
+    "idle": "assets/images/misc/icon_heart.png"
+}
+
+life_num_frames = {
+    "idle": 1
+}

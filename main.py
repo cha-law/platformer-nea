@@ -58,8 +58,9 @@ def draw_level(file_path: str, renderer: classes.Renderer) -> None:
                 additional_objects.append({"object_class": classes.Sprite("assets/images/level_blocks/tree/tree-lg.png", "tree", 1, True), "position": Vector2(x, y), "size": Vector2(60, 60), "renderer": renderer})
         
             if "cn" in objects:
-                additional_objects.append({"object_class": classes.AnimatableSprite({"idle": "assets/images/misc/coins.png"}, {"idle": 5}, Vector2(16), False, "coin"), "position": Vector2(x, y), "size": Vector2(25, 25), "renderer": renderer})
-
+                additional_objects.append({"object_class": classes.AnimatableSprite({"idle": "assets/images/misc/coins.png"}, {"idle": 5}, Vector2(16), False, "coin"), "position": Vector2(x, y), "size": Vector2(25), "renderer": renderer})
+            if "life" in objects:
+                additional_objects.append({"object_class": classes.AnimatableSprite(characters.life_images, characters.life_num_frames, Vector2(16), False, "life"), "position": Vector2(x, y), "size": Vector2(25), "renderer": renderer})
             if "fence" in objects:
                 additional_objects.append({"object_class": classes.Sprite("assets/images/level_blocks/fences/fence.png", "fence", 1, True), "position": Vector2(x, y), "size": Vector2(30, 30), "renderer": renderer})
 
@@ -252,6 +253,11 @@ def main() -> None:
                     pygame.mixer.Sound("assets/sound/hurt.mp3").play().set_volume(0.3)
                     player.cooldown = True
                     cooldown_timer = 0
+
+                if object.object_type == "life" and not player.dead:
+                    player.setLives(1)
+                    renderer.objects.remove(object)
+                    pygame.mixer.Sound("assets/sound/heal.wav").play().set_volume(0.3)
 
                 if object.object_type == "exit":
                     if not room_debounce:

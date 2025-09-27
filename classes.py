@@ -246,7 +246,7 @@ class Player(AnimatableSprite):
             self.last_move = move
 
             if self.position.x + 20 <= 0: self.position.x = -20
-            elif self.position.x + self.size.x - 20 >= 1300: self.position.x = 1300 - self.size.x + 20
+            elif self.position.x + self.size.x - 20 >= 1375: self.position.x = 1375 - self.size.x + 20
 
             if self.position.y + 20 <= 0: self.position.y = -20
             elif self.position.y + self.size.y - 20 >= 690: self.position.y = 690 - self.size.y + 20

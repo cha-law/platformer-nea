@@ -4,13 +4,13 @@ g,g,g,g_rk,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g_tr-lg,g,g,g,dg,dg,dg,dg,g,g,g,g,g,g
 g,g_tr-lg,g,g,g,g,g,g,g,g,g_rk,g,g,g_tr-sm,g,g,g,g,g,g,g,g,g,g,dg,dg,dg,dg,g,g,g,g,g_rk,g,g,g,g,g,g,g,g,g,g,g,g,g
 g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g_tr-sm,g,g,g,g,g,g,dg,dg,dg,dg,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g
 g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,dg_smz,dg,dg,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g
-g,g,g,g,g,g,g,g,g_tr-sm,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,dg,dg,dg,g,g,g,g,g,g,g,g,g,g,g_tr-sm,g,g,g,g,g,g,g
+g,g,g,g,g,g,g,g,g_tr-sm,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,dg,dg_smsk,dg,g,g,g,g,g,g,g,g,g,g,g_tr-sm,g,g,g,g,g,g,g
 g,g,g,g,g_tr-sm,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,dg,dg,dg,g,g,g,g_rk,g,g,g,g,g,g,g,g,g,g,g,g,g_rk,g,g
 g,g,g,g,g,g,g,g,g,g,g,g_tr-sm,g,g,g,g,g,g,g,g,g,g,g,g,dg,dg,dg,dg,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g
 g,dg,dg,dg,dg,dg,dg,dg,dg,g,dg,dg,g,dg,dg,dg,dg,g,dg,dg,g,g,g,g,g,dg,dg,dg,dg,g,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,g,g,g
 dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,g,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg
-dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg
-dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg_smsk,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg_smsk,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg
+dg,dg,dg,dg,dg,dg,dg,dg,dg_bgsk,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg
+dg,dg,dg,dg,dg_smsk,dg,dg,dg,dg,dg,dg,dg,dg_smsk,dg,dg,dg,dg,dg,dg_smsk,dg,dg,dg,dg,dg,dg_bgsk,dg,dg,dg,dg,dg_smsk,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg
 dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,g
 g,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,g,g,dg,dg,dg,g,dg,g,g,dg,dg,dg,g,dg,dg,g,g,g
 g,g,dg,dg,g,dg,g,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,dg,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g
