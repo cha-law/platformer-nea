@@ -125,6 +125,11 @@ class AnimatableSprite(Sprite):
         else:
             self.surface = self.frames[self.playing][self.current_frame]
 
+class RoomTeleport(AnimatableSprite):
+    def __init__(self, room_to: int, z_index: int = 1):
+        super().__init__(characters.arrow_images, characters.arrow_num_frames, Vector2(32), False, "exit")
+        self.room_to = room_to
+
 class Enemy(AnimatableSprite):
     def __init__(self, images: dict[str, str], num_frames: dict[str, int], frame_size: Vector2 = Vector2(64, 64), crop: bool = False, object_type: str = "x", z_index: int = 1):
         super().__init__(images, num_frames, frame_size, crop, object_type, z_index, False)

@@ -65,7 +65,7 @@ def draw_level(file_path: str, renderer: classes.Renderer) -> None:
                 additional_objects.append({"object_class": classes.Sprite("assets/images/level_blocks/fences/fence.png", "fence", 1, True), "position": Vector2(x, y), "size": Vector2(30, 30), "renderer": renderer})
 
             if "exit" in objects:
-                additional_objects.append({"object_class": classes.AnimatableSprite({"idle": "assets/images/misc/arrow.png"}, {"idle": 2}, Vector2(32), False, "exit"), "position": Vector2(x, y), "size": Vector2(30, 30), "renderer": renderer})
+                additional_objects.append({"object_class": classes.RoomTeleport(3), "position": Vector2(x, y), "size": Vector2(30), "renderer": renderer})
 
             if "spawn" in objects:
                 spawn.set_spawn(Vector2(x, y))   
@@ -177,7 +177,7 @@ def main() -> None:
     # GAME LOOP
     while running:
         delta_time = clock.tick()
-        renderer.screen.fill((215, 252, 252)) # Default background colour
+        renderer.screen.fill((255,255,255)) # Default background colour
 
         # Detect if the pygame console has been quit.
         for event in pygame.event.get():
@@ -259,9 +259,9 @@ def main() -> None:
                     renderer.objects.remove(object)
                     pygame.mixer.Sound("assets/sound/heal.wav").play().set_volume(0.3)
 
-                if object.object_type == "exit":
+                if isinstance(object, classes.RoomTeleport) and object.object_type == "exit":
                     if not room_debounce:
-                        room += 1
+                        room = object.room_to
                         room_debounce = True
                         
                         renderer.clear()

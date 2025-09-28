@@ -70,3 +70,11 @@ life_images = {
 life_num_frames = {
     "idle": 1
 }
+
+arrow_images = {
+    "idle": "assets/images/misc/arrow.png"
+}
+
+arrow_num_frames = {
+    "idle": 5
+}
