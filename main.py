@@ -63,9 +63,17 @@ def draw_level(file_path: str, renderer: classes.Renderer) -> None:
                 additional_objects.append({"object_class": classes.AnimatableSprite(characters.life_images, characters.life_num_frames, Vector2(16), False, "life"), "position": Vector2(x, y), "size": Vector2(25), "renderer": renderer})
             if "fence" in objects:
                 additional_objects.append({"object_class": classes.Sprite("assets/images/level_blocks/fences/fence.png", "fence", 1, True), "position": Vector2(x, y), "size": Vector2(30, 30), "renderer": renderer})
+            
+            # Check for exits
+            for  obj in objects:
+                if "exit" in obj:
+                    objs = obj.split("-") # Split to get separate values for room number and angle
+                    room_number = int(objs[1])
+                    rotation = int(objs[2])
 
-            if "exit" in objects:
-                additional_objects.append({"object_class": classes.RoomTeleport(3), "position": Vector2(x, y), "size": Vector2(30), "renderer": renderer})
+                    # Create exit oddbject and rotate
+                    new_exit = classes.RoomTeleport(room_number, 1, rotation)
+                    additional_objects.append({"object_class": new_exit, "position": Vector2(x, y), "size": Vector2(30), "renderer": renderer}) 
 
             if "spawn" in objects:
                 spawn.set_spawn(Vector2(x, y))   

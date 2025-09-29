@@ -96,7 +96,7 @@ class Sprite(RenderableObject):
         self.direction *= -1
 
 class AnimatableSprite(Sprite):
-    def __init__(self, images: dict[str, str], num_frames: dict[str, int], frame_size: Vector2 = Vector2(64, 64), crop: bool = False, object_type: str = "x", z_index: int = 1, collideable: bool = False):
+    def __init__(self, images: dict[str, str], num_frames: dict[str, int], frame_size: Vector2 = Vector2(64, 64), crop: bool = False, object_type: str = "x", z_index: int = 1, collideable: bool = False, rotation: int = 0):
         super().__init__("", object_type, z_index, collideable)
         self.images = images # Original image
         self.frames = extract_frames(images, frame_size, num_frames, crop)
@@ -107,6 +107,7 @@ class AnimatableSprite(Sprite):
         self.num_frames = self.dict_num_frames["idle"] # The number of frames in the current animation.
         self.fps = 8 # Frames per second for the animation
         self.crop = crop
+        self.rotation = rotation
 
     def change_animation(self, new_anim: str):
         self.playing = new_anim
@@ -123,11 +124,11 @@ class AnimatableSprite(Sprite):
         if self.direction == -1:
             self.surface = pygame.transform.flip(self.frames[self.playing][self.current_frame], True, False)
         else:
-            self.surface = self.frames[self.playing][self.current_frame]
+            self.surface = pygame.transform.rotate(self.frames[self.playing][self.current_frame], self.rotation)
 
 class RoomTeleport(AnimatableSprite):
-    def __init__(self, room_to: int, z_index: int = 1):
-        super().__init__(characters.arrow_images, characters.arrow_num_frames, Vector2(32), False, "exit")
+    def __init__(self, room_to: int, z_index: int = 1, rotation: int = 0):
+        super().__init__(characters.arrow_images, characters.arrow_num_frames, Vector2(32), False, "exit", z_index, False, rotation)
         self.room_to = room_to
 
 class Enemy(AnimatableSprite):
