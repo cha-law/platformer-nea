@@ -108,23 +108,31 @@ class AnimatableSprite(Sprite):
         self.fps = 8 # Frames per second for the animation
         self.crop = crop
         self.rotation = rotation
+        self.frozen = False
 
     def change_animation(self, new_anim: str):
         self.playing = new_anim
         self.current_frame = 0 # Reset frame back to 0
         self.num_frames = self.dict_num_frames[new_anim]
 
-    def reload(self):
+    def reload(self) -> None:
         self.frames = extract_frames(self.images, self.frame_size, self.dict_num_frames, self.crop)
 
-    def update_frame(self):
-        self.current_frame: int = int((time.time() - start_time) * self.fps % self.dict_num_frames[self.playing]) # type: ignore
-        if self.current_frame >= len(self.frames[self.playing]): self.current_frame = 0
+    def freeze(self) -> None:
+        self.frozen = True
+    
+    def unfreeze(self) -> None:
+        self.frozen = False
 
-        if self.direction == -1:
-            self.surface = pygame.transform.flip(self.frames[self.playing][self.current_frame], True, False)
-        else:
-            self.surface = pygame.transform.rotate(self.frames[self.playing][self.current_frame], self.rotation)
+    def update_frame(self):
+        if not self.frozen:
+            self.current_frame: int = int((time.time() - start_time) * self.fps % self.dict_num_frames[self.playing]) # type: ignore
+            if self.current_frame >= len(self.frames[self.playing]): self.current_frame = 0
+
+            if self.direction == -1:
+                self.surface = pygame.transform.flip(self.frames[self.playing][self.current_frame], True, False)
+            else:
+                self.surface = pygame.transform.rotate(self.frames[self.playing][self.current_frame], self.rotation)
 
 class RoomTeleport(AnimatableSprite):
     def __init__(self, room_to: int, z_index: int = 1, rotation: int = 0):
@@ -132,10 +140,11 @@ class RoomTeleport(AnimatableSprite):
         self.room_to = room_to
 
 class Enemy(AnimatableSprite):
-    def __init__(self, images: dict[str, str], num_frames: dict[str, int], frame_size: Vector2 = Vector2(64, 64), crop: bool = False, object_type: str = "x", z_index: int = 1):
+    def __init__(self, images: dict[str, str], num_frames: dict[str, int], frame_size: Vector2 = Vector2(64, 64), crop: bool = False, object_type: str = "x", z_index: int = 1, damage: int = 1):
         super().__init__(images, num_frames, frame_size, crop, object_type, z_index, False)
         self.lives = 3
         self.tracking = False
+        self.damage = damage
 
     def update_movement(self):
         ...
@@ -199,7 +208,7 @@ class Small_Skeleton(Enemy):
 
 class Big_Skeleton(Enemy):
     def __init__(self, object_type: str = "x", z_index: int = 1):
-        super().__init__(characters.bigskeleton_images, characters.bigskeleton_num_frames, Vector2(64, 48), False, object_type, z_index)
+        super().__init__(characters.bigskeleton_images, characters.bigskeleton_num_frames, Vector2(64, 48), False, object_type, z_index, 2)
         self.lives = 5
         self.speed = 0.3
         self.steps = 0
@@ -259,8 +268,8 @@ class Player(AnimatableSprite):
 
             if self.direction * move.x < 0: self.direction *= -1
 
-            self.playing = "walk"
-            
+            if self.playing == "idle":
+                self.playing = "walk"        
 
     def setLives(self, life_multiplier: int):
         self.lives += life_multiplier
