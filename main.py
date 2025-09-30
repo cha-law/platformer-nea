@@ -2,10 +2,6 @@ import pygame, time
 from pygame import Vector2
 import classes, characters, functions
 
-stats: classes.GameStats = classes.GameStats(0)
-player: classes.Player = classes.Player(characters.knight_images, characters.knight_num_frames)
-spawn: classes.Spawn = classes.Spawn()
-
 def main() -> None:
     
     # PYGAME SETUP
@@ -16,8 +12,14 @@ def main() -> None:
     running: bool = True
 
     # GAME VARIABLES
+    stats: classes.GameStats = classes.GameStats(0)
+    player: classes.Player = classes.Player(characters.knight_images, characters.knight_num_frames)
+    spawn: classes.Spawn = classes.Spawn()
+
+    # MENU VARIABLES
     menu_active: bool = False
 
+    # LEVEL VARIABLES
     world = 1
     level = 1
     room = 1
@@ -51,7 +53,7 @@ def main() -> None:
             continue
         
         # Change animation back to idle if player stops moving
-        if player.playing == "walk": 
+        if player.playing == "walk" or cooldown_timer == 100: 
             player.change_animation("idle")
 
         if cooldown_timer >= 100:
@@ -169,7 +171,10 @@ def main() -> None:
         
         pygame.display.flip()
 
+
+# Start the main function
 if __name__ == "__main__":
     main()
 
+# Quit pygame once main function has ended
 pygame.quit()
