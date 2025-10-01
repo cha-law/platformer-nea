@@ -1,8 +1,8 @@
-import pygame, time
+import pygame, time, asyncio
 from pygame import Vector2
 import classes, characters, functions
 
-def main() -> None:
+async def main() -> None:
     
     # PYGAME SETUP
     pygame.init()
@@ -53,7 +53,7 @@ def main() -> None:
             continue
         
         # Change animation back to idle if player stops moving
-        if player.playing == "walk" or cooldown_timer == 100: 
+        if player.playing == "walk" or player.playing == "attack" or cooldown_timer == 100: 
             player.change_animation("idle")
 
         if cooldown_timer >= 100:
@@ -103,17 +103,17 @@ def main() -> None:
 
         # Get object collisions
         object_collisions: list[classes.RenderableObject] = functions.get_collisions(renderer, player)
+        attack_collisions: list[classes.Enemy] = functions.get_attack_collisions(renderer, player)
 
-        for object in object_collisions:
-            if isinstance(object, classes.Sprite):
-
-                if player.playing == "attack" and isinstance(object, classes.Enemy) and functions.player_attack_colliding(player, object):
-                    object.setLives(-1)
-                    print("damage")
-
+        async with asyncio.TaskGroup() as attack:
+            for object in attack_collisions:
+                if player.playing == "attack":
+                    attack.create_task(object.setLives(-1))
                     if object.lives <= 0:
                         renderer.objects.remove(object)
 
+        for object in object_collisions:
+            if isinstance(object, classes.Sprite):
                 if object.object_type == "coin":
                     stats.add_coin()
                     if soundtrack := pygame.mixer.Sound("assets/sound/coin.mp3"):
@@ -181,7 +181,7 @@ def main() -> None:
 
 # Start the main function
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
 
 # Quit pygame once main function has ended
 pygame.quit()

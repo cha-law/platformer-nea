@@ -129,13 +129,13 @@ def is_colliding(obj1: classes.RenderableObject, obj2: classes.RenderableObject)
 def player_attack_colliding(plr: classes.Player, obj: classes.RenderableObject) -> bool:
     if plr.direction == -1:
         attack_direction = (
-            plr.position.x - 120 < obj.position.x + obj.size.x and # hitbox extended for attack
+            plr.position.x - 5 < obj.position.x + obj.size.x and # hitbox extended for attack
             plr.position.x + plr.size.x > obj.position.x + 20
         )
     else:
         attack_direction = (
             plr.position.x < obj.position.x + obj.size.x - 20 and
-            plr.position.x + plr.size.x + 120 > obj.position.x # hitbox extended for attack
+            plr.position.x + plr.size.x + 5 > obj.position.x # hitbox extended for attack
         )
 
     return (
@@ -169,6 +169,15 @@ def get_collisions(renderer: classes.Renderer, player: classes.Player):
 
     for object in renderer.objects:
         if is_colliding(player, object):
+            collisions_list.append(object)
+
+    return collisions_list
+
+def get_attack_collisions(renderer: classes.Renderer, player: classes.Player):
+    collisions_list: list[classes.Enemy] = []
+
+    for object in renderer.objects:
+        if player_attack_colliding(player, object) and isinstance(object, classes.Enemy):
             collisions_list.append(object)
 
     return collisions_list

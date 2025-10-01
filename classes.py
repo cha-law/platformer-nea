@@ -2,6 +2,7 @@ from abc import ABC
 from typing import Optional, List
 from pygame import Surface, Vector2
 import pygame, time
+import asyncio
 
 import characters
 
@@ -145,12 +146,24 @@ class Enemy(AnimatableSprite):
         self.lives = 3
         self.tracking = False
         self.damage = damage
+        self.attack_cooldown: bool = False
+        self._lock = asyncio.Lock()
 
     def update_movement(self):
         ...
 
-    def setLives(self, life_multiplier: int):
-        self.lives += life_multiplier
+    async def setLives(self, life_multiplier: int):
+        async with self._lock:
+            if self.attack_cooldown: # Return if the enemy is on cooldown
+                return
+            self.lives += life_multiplier # Remove life
+            self.attack_cooldown = True # Prevent enemy from being attacked again
+
+            asyncio.create_task(self.set_cooldown()) # Set cooldown for the enemy
+    
+    async def set_cooldown(self):
+        await asyncio.sleep(2)
+        self.attack_cooldown = False
 
 class Small_Zombie(Enemy):
     def __init__(self, images: dict[str, str], num_frames: dict[str, int], frame_size: Vector2 = Vector2(64, 64), crop: bool = False, object_type: str = "x", z_index: int = 1):
