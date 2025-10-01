@@ -48,6 +48,8 @@ def draw_level(file_path: str, renderer: classes.Renderer, spawn: classes.Spawn)
                 create_object(classes.Sprite(f"assets/images/level_blocks/decor/rock-{random.randint(1,2)}.png", "rock", 1, True), Vector2(x, y), Vector2(30, 30), renderer)
             if "smz" in objects:
                 additional_objects.append({"object_class": classes.Small_Zombie({"idle": "assets/images/enemies/zombie/small/idle.png", "walk": "assets/images/enemies/zombie/small/walk.png", "attack": "assets/images/enemies/zombie/small/attack.png"}, {"idle": 4, "walk": 5, "attack": 4}, Vector2(32), False, "enemy", 2), "position": Vector2(x, y), "size": Vector2(35), "renderer": renderer})
+            if "bz" in objects:
+                additional_objects.append({"object_class": classes.Big_Zombie("enemy", 2), "position": Vector2(x, y), "size": Vector2(40), "renderer": renderer})
             if "smsk" in objects:
                 additional_objects.append({"object_class": classes.Small_Skeleton("enemy", 2), "position": Vector2(x, y), "size": Vector2(70, 35), "renderer": renderer})
             if "bgsk" in objects:
@@ -122,6 +124,24 @@ def is_colliding(obj1: classes.RenderableObject, obj2: classes.RenderableObject)
         obj1.position.x + obj1.size.x > obj2.position.x + 20 and
         obj1.position.y < obj2.position.y + obj2.size.y - 30 and
         obj1.position.y + obj1.size.y > obj2.position.y + 20
+    )
+
+def player_attack_colliding(plr: classes.Player, obj: classes.RenderableObject) -> bool:
+    if plr.direction == -1:
+        attack_direction = (
+            plr.position.x - 120 < obj.position.x + obj.size.x and # hitbox extended for attack
+            plr.position.x + plr.size.x > obj.position.x + 20
+        )
+    else:
+        attack_direction = (
+            plr.position.x < obj.position.x + obj.size.x - 20 and
+            plr.position.x + plr.size.x + 120 > obj.position.x # hitbox extended for attack
+        )
+
+    return (
+        attack_direction and
+        plr.position.y < obj.position.y + obj.size.y - 30 and
+        plr.position.y + plr.size.y > obj.position.y + 20
     )
 
 def manage_player_colliding(plr: classes.Player, obj2: classes.RenderableObject) -> None:

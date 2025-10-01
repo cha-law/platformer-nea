@@ -61,6 +61,16 @@ bigskeleton_num_frames = {
     "attack": 8
 }
 
+bigzombie_images = {
+    "idle": "assets/images/enemies/zombie/big/zombie_big_attack.png",
+    "walk": "assets/images/enemies/zombie/big/zombie_big_attack.png"
+}
+
+bigzombie_num_frames = {
+    "idle": 5,
+    "walk": 5
+}
+
 # MISC
 
 life_images = {

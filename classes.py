@@ -149,10 +149,13 @@ class Enemy(AnimatableSprite):
     def update_movement(self):
         ...
 
+    def setLives(self, life_multiplier: int):
+        self.lives += life_multiplier
+
 class Small_Zombie(Enemy):
     def __init__(self, images: dict[str, str], num_frames: dict[str, int], frame_size: Vector2 = Vector2(64, 64), crop: bool = False, object_type: str = "x", z_index: int = 1):
         super().__init__(images, num_frames, frame_size, crop, object_type, z_index)
-        self.lives = 3
+        self.lives = 2
         self.speed = 0.5
         self.steps = 0
         self.tracking = False
@@ -170,7 +173,7 @@ class Small_Zombie(Enemy):
 class Small_Skeleton(Enemy):
     def __init__(self, object_type: str = "x", z_index: int = 1):
         super().__init__(characters.smallskeleton_images, characters.smallskeleton_num_frames, Vector2(64, 32), False, object_type, z_index)
-        self.lives = 3
+        self.lives = 1
         self.speed = 0.6
         self.steps = 0
         self.range = 175
@@ -209,6 +212,45 @@ class Small_Skeleton(Enemy):
 class Big_Skeleton(Enemy):
     def __init__(self, object_type: str = "x", z_index: int = 1):
         super().__init__(characters.bigskeleton_images, characters.bigskeleton_num_frames, Vector2(64, 48), False, object_type, z_index, 2)
+        self.lives = 3
+        self.speed = 0.3
+        self.steps = 0
+        self.range = 300
+        self.tracking = True
+
+    def update_movement(self, player: "Player"): # type: ignore
+        self.change_animation("walk")
+
+        player_center = Vector2(player.position.x + player.size.x/2, player.position.y + player.size.y/2) 
+        enemy_center = Vector2(self.position.x + self.size.x/2, self.position.y + self.size.y/2)
+        
+        if player_center.distance_to(enemy_center) <= self.range and not player.dead:
+            # Player is in range
+            self.speed = 0.9
+            direction = (player_center - enemy_center).normalize() # Direction to player from enemy
+            self.position.x += round(self.speed * direction.x) 
+            self.position.y += round(self.speed * direction.y)
+            
+            # Check direction
+            if direction.x < 0:
+                self.direction = -1
+            else:
+                self.direction = 1
+        else:
+            # Player is not in range
+            self.speed = 0.3
+            self.position.x += (self.speed * self.direction)
+            self.steps += (self.direction * self.speed)
+            
+            if self.steps >= 40:
+                self.direction = -1
+            
+            if self.steps <= -40:
+                self.direction = 1
+
+class Big_Zombie(Enemy):
+    def __init__(self, object_type: str = "x", z_index: int = 1):
+        super().__init__(characters.bigzombie_images, characters.bigzombie_num_frames, Vector2(32), False, object_type, z_index, 2)
         self.lives = 5
         self.speed = 0.3
         self.steps = 0

@@ -82,7 +82,7 @@ def main() -> None:
         if key_pressed[pygame.K_d]:
             player.move(Vector2(current_speed.x, 0) * delta_time)
 
-        if mouse_pressed[0]:
+        if mouse_pressed[0] or key_pressed[pygame.K_e]:
             player.change_animation("attack")
 
         if key_pressed[pygame.K_SPACE] and player.dead:
@@ -106,6 +106,13 @@ def main() -> None:
 
         for object in object_collisions:
             if isinstance(object, classes.Sprite):
+
+                if player.playing == "attack" and isinstance(object, classes.Enemy) and functions.player_attack_colliding(player, object):
+                    object.setLives(-1)
+                    print("damage")
+
+                    if object.lives <= 0:
+                        renderer.objects.remove(object)
 
                 if object.object_type == "coin":
                     stats.add_coin()
