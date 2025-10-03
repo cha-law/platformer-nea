@@ -42,7 +42,10 @@ class Renderer():
                     else: 
                         sprite.update_movement()
 
-            sprite.draw(self.screen)     
+            if isinstance(sprite, Text):
+                self.screen.blit(sprite.font.render(sprite.text, True, sprite.color), sprite.position)
+            else:
+                sprite.draw(self.screen)     
 
     def clear(self):
         self.objects = []
@@ -156,6 +159,7 @@ class Enemy(AnimatableSprite):
         async with self._lock:
             if self.attack_cooldown: # Return if the enemy is on cooldown
                 return
+            pygame.mixer.Sound("assets/sound/hit_enemy.wav").play().set_volume(0.3)
             self.lives += life_multiplier # Remove life
             self.attack_cooldown = True # Prevent enemy from being attacked again
 

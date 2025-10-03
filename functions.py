@@ -88,8 +88,33 @@ def draw_level(file_path: str, renderer: classes.Renderer, spawn: classes.Spawn)
     for object in additional_objects:
         create_object(object["object_class"], object["position"], object["size"], object["renderer"]) # type: ignore
 
-def draw_menu():
-    pass
+def draw_menu(renderer: classes.Renderer, menu_options: list[str], selected_button: str) -> None:
+    menu_elements: list[classes.Text] = []
+
+    # Create title
+    title_font = pygame.font.Font("assets/fonts/pixel.ttf", 50)
+    button_font = pygame.font.Font("assets/fonts/pixel.ttf", 35)
+    game_title = classes.Text("Game Title", title_font, pygame.Color(255, 255, 255))
+    game_title.position = Vector2(550, 170)
+    menu_elements.append(game_title)
+
+    y = 300
+    added_string = ""
+
+    for item in menu_options:
+        if selected_button == item:
+            added_string = ">> "
+        else:
+            added_string = ""
+
+        button = classes.Text(added_string + item, button_font, pygame.Color(50, 50, 50))
+        button.position = Vector2(550, y)
+        menu_elements.append(button)
+        y += 40
+
+    # Load all elements
+    for item in menu_elements:
+        renderer.objects.append(item)
 
 def draw_coins(renderer: classes.Renderer, stats: classes.GameStats):
     coin_symbol = classes.Sprite("assets/images/misc/coin.png")

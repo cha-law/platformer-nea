@@ -6,7 +6,6 @@ async def main() -> None:
     
     # PYGAME SETUP
     pygame.init()
-
     renderer = classes.Renderer()
     clock = pygame.time.Clock()
     running: bool = True
@@ -16,21 +15,30 @@ async def main() -> None:
     player: classes.Player = classes.Player(characters.knight_images, characters.knight_num_frames)
     spawn: classes.Spawn = classes.Spawn()
 
-    # MENU VARIABLES
-    menu_active: bool = False
-
-    # LEVEL VARIABLES
+    # Level Variables
     world = 1
     level = 1
     room = 1
-    room_debounce = False
+    room_debounce = False   
 
-    #draw_level("menu.csv", renderer)
-    functions.draw_level(f"worlds/{world}/l{level}/r{room}.csv", renderer, spawn)
-    player.position = spawn.position
+    # Menu Variables
+    menu_active: bool = True
+    selected_menu_button: str = "PLAY"
+    selected_menu_index: int = 0
+    menu_options: list[str] = ["PLAY", "COSMETICS", "OPTIONS", "CONTROLS", "QUIT"]
+    menu_down_pressed: bool = False
+    menu_up_pressed: bool = False
 
+    # Drawn Variables
+    menu_drawn: bool = False
+    level_drawn: bool = False
+
+    # Time variables
     cooldown_timer = 0
     dead_time = None
+
+    # Set player position
+    player.position = spawn.position
 
     # GAME LOOP
     while running:
@@ -42,9 +50,59 @@ async def main() -> None:
             if event.type == pygame.QUIT:
                 running = False
 
-        # MENU SCRIPT
+        # When the menu is active
         if menu_active:
-            renderer.update()
+            if not menu_drawn:
+                spawn.position = Vector2(1300/2, 600)
+                player.position = spawn.position
+                functions.draw_level("menu.csv", renderer, spawn)
+                menu_drawn = True
+                level_drawn = False
+
+            functions.draw_menu(renderer, menu_options, selected_menu_button)
+
+            # Get inputs
+            key_pressed = pygame.key.get_pressed()
+
+            if key_pressed[pygame.K_RETURN]:
+                if selected_menu_button == "PLAY":
+                    print("play")
+                elif selected_menu_button == "COSMETICS":
+                    print("cosmetics")
+                elif selected_menu_button == "OPTIONS":
+                    print("options")
+                elif selected_menu_button == "CONTROLS":
+                    print("controls")
+                elif selected_menu_button == "QUIT":
+                    running = False
+
+            # Handle inputs for moving between menu options
+            if key_pressed[pygame.K_s] or key_pressed[pygame.K_DOWN]:
+                if not menu_down_pressed: # Stop function if down was already pressed
+                    selected_menu_index += 1
+
+                    if selected_menu_index >= len(menu_options):
+                        selected_menu_index = 0
+
+                    selected_menu_button = menu_options[selected_menu_index]
+                    menu_down_pressed = True
+            else:
+                menu_down_pressed = False
+
+            if key_pressed[pygame.K_w] or key_pressed[pygame.K_UP]:
+                if not menu_up_pressed: # Stop function if up was already pressed
+                    selected_menu_index -= 1
+
+                    if selected_menu_index < 0:
+                        selected_menu_index = len(menu_options) - 1
+
+                    selected_menu_button = menu_options[selected_menu_index]
+                    menu_up_pressed = True
+            else:
+                menu_up_pressed = False
+
+
+            renderer.update(player)
 
             player.update_frame()
             player.draw(renderer.screen)
@@ -52,6 +110,16 @@ async def main() -> None:
             pygame.display.flip()
             continue
         
+        # Draw level if not already drawn
+        if not level_drawn:
+            functions.draw_level(f"worlds/{world}/l{level}/r{room}.csv", renderer, spawn)
+            player.position = spawn.position
+            level_drawn = True
+            menu_drawn = False
+
+            # Rerender player
+            renderer.objects.append(player)
+
         # Change animation back to idle if player stops moving
         if player.playing == "walk" or player.playing == "attack" or cooldown_timer == 100: 
             player.change_animation("idle")
@@ -117,7 +185,7 @@ async def main() -> None:
                 if object.object_type == "coin":
                     stats.add_coin()
                     if soundtrack := pygame.mixer.Sound("assets/sound/coin.mp3"):
-                        soundtrack.play().set_volume(0.03)
+                        soundtrack.play().set_volume(0.1)
                     renderer.objects.remove(object) # type:ignore
 
                 if isinstance(object, classes.Enemy) and not player.cooldown and not player.dead and not player.playing == "block":
@@ -125,7 +193,7 @@ async def main() -> None:
                     player.change_animation("damage")
                     if player.lives > 0:
                         if soundtrack := pygame.mixer.Sound("assets/sound/hurt.mp3"):
-                            soundtrack.play().set_volume(0.3)
+                            soundtrack.play().set_volume(0.5)
                     else:
                         if soundtrack := pygame.mixer.Sound("assets/sound/death.mp3"):
                             soundtrack.play().set_volume(0.8)
