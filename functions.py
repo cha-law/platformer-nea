@@ -92,22 +92,22 @@ def draw_menu(renderer: classes.Renderer, menu_options: list[str], selected_butt
     menu_elements: list[classes.Text] = []
 
     # Create title
-    title_font = pygame.font.Font("assets/fonts/pixel.ttf", 50)
-    button_font = pygame.font.Font("assets/fonts/pixel.ttf", 35)
+    title_font = pygame.font.Font("assets/fonts/pixelify.ttf", 50)
+    button_font = pygame.font.Font("assets/fonts/pixelify.ttf", 35)
     game_title = classes.Text("Game Title", title_font, pygame.Color(255, 255, 255))
     game_title.position = Vector2(550, 170)
     menu_elements.append(game_title)
 
     y = 300
-    added_string = ""
+    colour = pygame.Color(255, 255, 255)
 
     for item in menu_options:
         if selected_button == item:
-            added_string = ">> "
+            colour = pygame.Color(50, 50, 50)
         else:
-            added_string = ""
+            colour = pygame.Color(255, 255, 255)
 
-        button = classes.Text(added_string + item, button_font, pygame.Color(50, 50, 50))
+        button = classes.Text(item, button_font, colour)
         button.position = Vector2(550, y)
         menu_elements.append(button)
         y += 40
@@ -123,7 +123,7 @@ def draw_coins(renderer: classes.Renderer, stats: classes.GameStats):
     coin_symbol.load()
     coin_symbol.draw(renderer.screen)
 
-    font = pygame.font.Font("assets/fonts/pixel.ttf", 35)
+    font = pygame.font.Font("assets/fonts/pixelify.ttf", 35)
     text = font.render(str(stats.coins), False, (200, 156, 4))
     renderer.screen.blit(text, (1185, 705))
 
