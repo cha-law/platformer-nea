@@ -37,6 +37,25 @@ async def main() -> None:
     cooldown_timer = 0
     dead_time = None
 
+    # Audio
+    pygame.mixer.set_num_channels(16)
+
+    background_music = pygame.mixer.Sound("assets/sound/music/music_loop1.wav")
+    background_music.set_volume(0.1)
+    background_music.play(loops=-1)
+
+    sound_effects: dict[str, pygame.mixer.Sound] = {
+        "coin": pygame.mixer.Sound("assets/sound/coin.mp3"),
+        "hurt": pygame.mixer.Sound("assets/sound/hurt.mp3"),
+        "death": pygame.mixer.Sound("assets/sound/death.mp3"),
+        "heal": pygame.mixer.Sound("assets/sound/heal.mp3"),
+    }
+
+    sound_effects["coin"].set_volume(0.1)
+    sound_effects["hurt"].set_volume(0.5)
+    sound_effects["death"].set_volume(0.8)
+    sound_effects["heal"].set_volume(0.2)
+
     # Set player position
     player.position = spawn.position
 
@@ -66,7 +85,8 @@ async def main() -> None:
 
             if key_pressed[pygame.K_RETURN]:
                 if selected_menu_button == "PLAY":
-                    print("play")
+                    menu_active = False
+                    renderer.clear()
                 elif selected_menu_button == "COSMETICS":
                     print("cosmetics")
                 elif selected_menu_button == "OPTIONS":
@@ -141,6 +161,10 @@ async def main() -> None:
             player.change_animation("block")
             current_speed = Vector2(0.1, 0.075)
 
+        if key_pressed[pygame.K_m]:
+            menu_active = True
+            renderer.clear()
+
         if key_pressed[pygame.K_w]:
             player.move(Vector2(0, -current_speed.y) * delta_time) 
         if key_pressed[pygame.K_s]:
@@ -184,19 +208,16 @@ async def main() -> None:
             if isinstance(object, classes.Sprite):
                 if object.object_type == "coin":
                     stats.add_coin()
-                    if soundtrack := pygame.mixer.Sound("assets/sound/coin.mp3"):
-                        soundtrack.play().set_volume(0.1)
+                    sound_effects["coin"].play()
                     renderer.objects.remove(object) # type:ignore
 
                 if isinstance(object, classes.Enemy) and not player.cooldown and not player.dead and not player.playing == "block":
                     player.setLives(-object.damage)
                     player.change_animation("damage")
                     if player.lives > 0:
-                        if soundtrack := pygame.mixer.Sound("assets/sound/hurt.mp3"):
-                            soundtrack.play().set_volume(0.5)
+                        sound_effects["hurt"].play()
                     else:
-                        if soundtrack := pygame.mixer.Sound("assets/sound/death.mp3"):
-                            soundtrack.play().set_volume(0.8)
+                        sound_effects["death"].play()
 
                     player.cooldown = True
                     cooldown_timer = 0
@@ -204,7 +225,7 @@ async def main() -> None:
                 if object.object_type == "life" and not player.dead:
                     player.setLives(1)
                     renderer.objects.remove(object)
-                    pygame.mixer.Sound("assets/sound/heal.mp3").play().set_volume(0.2)
+                    sound_effects["heal"].play()
 
                 if isinstance(object, classes.RoomTeleport) and object.object_type == "exit":
                     if not room_debounce:
