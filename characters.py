@@ -24,13 +24,15 @@ knight_num_frames = {
 smallzombie_images = {
     "idle": "assets/images/enemies/zombie/small/idle.png", 
     "walk": "assets/images/enemies/zombie/small/walk.png", 
-    "attack": "assets/images/enemies/zombie/small/attack.png"
+    "attack": "assets/images/enemies/zombie/small/attack.png",
+    "damage": "assets/images/enemies/zombie/small/attack.png"
 }
 
 smallzombie_num_frames = {
     "idle": 4, 
     "walk": 5, 
-    "attack": 4
+    "attack": 4,
+    "damage": 4
 }
 
 smallskeleton_images = {
@@ -62,13 +64,17 @@ bigskeleton_num_frames = {
 }
 
 bigzombie_images = {
-    "idle": "assets/images/enemies/zombie/big/zombie_big_attack.png",
-    "walk": "assets/images/enemies/zombie/big/zombie_big_attack.png"
+    "idle": "assets/images/enemies/zombie/big/walk.png",
+    "walk": "assets/images/enemies/zombie/big/walk.png",
+    "attack": "assets/images/enemies/zombie/big/attack.png",
+    "damage": "assets/images/enemies/zombie/big/damage.png"
 }
 
 bigzombie_num_frames = {
-    "idle": 5,
-    "walk": 5
+    "idle": 4,
+    "walk": 4,
+    "attack": 5,
+    "damage": 4
 }
 
 # MISC

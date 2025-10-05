@@ -153,7 +153,7 @@ async def main() -> None:
         key_pressed = pygame.key.get_pressed()
         mouse_pressed = pygame.mouse.get_pressed()
 
-        if key_pressed[pygame.K_q]:
+        if key_pressed[pygame.K_q] and not player.dead:
             player.change_animation("block")
             current_speed = Vector2(0.1, 0.075)
 
@@ -174,7 +174,7 @@ async def main() -> None:
             player.move(Vector2(current_speed.x, 0) * delta_time)
             moving = True
 
-        if mouse_pressed[0] or key_pressed[pygame.K_e]:
+        if mouse_pressed[0] or key_pressed[pygame.K_e] and not player.dead:
             player.change_animation("attack", False)
 
         # Change animation to idle if player stops moving
@@ -211,6 +211,8 @@ async def main() -> None:
                     attack.create_task(object.setLives(-1))
                     if object.lives <= 0:
                         renderer.objects.remove(object)
+                    else:
+                        object.change_animation("damage", False)
 
         for object in object_collisions:
             if isinstance(object, classes.Sprite):
@@ -222,6 +224,7 @@ async def main() -> None:
                 if isinstance(object, classes.Enemy) and not player.cooldown and not player.dead and not player.playing == "block":
                     player.setLives(-object.damage)
                     player.change_animation("damage", False)
+                    object.change_animation("attack", False)
                     if player.lives > 0:
                         sound_effects["hurt"].play()
                     else:

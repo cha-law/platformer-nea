@@ -118,6 +118,7 @@ class AnimatableSprite(Sprite):
         self.animation_done = False
 
     def change_animation(self, new_anim: str, loop: bool = True):
+        if new_anim not in self.images: return
         self.playing = new_anim
         self.current_frame = 0 # Reset frame back to 0
         self.num_frames = self.dict_num_frames[new_anim]
@@ -199,6 +200,9 @@ class Small_Zombie(Enemy):
         self.tracking = False
 
     def update_movement(self):
+        if self.playing in ("attack", "damage") and self.animation_done:
+            self.change_animation("walk")
+
         self.position.x += (self.speed * self.direction)
         self.steps += (self.direction * self.speed)
 
@@ -218,7 +222,8 @@ class Small_Skeleton(Enemy):
         self.tracking = True
 
     def update_movement(self, player: "Player"): # type: ignore
-        self.change_animation("walk")
+        if self.playing in ("attack", "damage") and self.animation_done:
+            self.change_animation("walk")
 
         player_center = Vector2(player.position.x + player.size.x/2, player.position.y + player.size.y/2) 
         enemy_center = Vector2(self.position.x + self.size.x/2, self.position.y + self.size.y/2)
@@ -257,7 +262,8 @@ class Big_Skeleton(Enemy):
         self.tracking = True
 
     def update_movement(self, player: "Player"): # type: ignore
-        self.change_animation("walk")
+        if self.playing in ("attack", "damage") and self.animation_done:
+            self.change_animation("walk")
 
         player_center = Vector2(player.position.x + player.size.x/2, player.position.y + player.size.y/2) 
         enemy_center = Vector2(self.position.x + self.size.x/2, self.position.y + self.size.y/2)
@@ -296,8 +302,9 @@ class Big_Zombie(Enemy):
         self.tracking = True
 
     def update_movement(self, player: "Player"): # type: ignore
-        self.change_animation("walk")
-
+        if self.playing in ("attack", "damage") and self.animation_done:
+            self.change_animation("walk")
+            
         player_center = Vector2(player.position.x + player.size.x/2, player.position.y + player.size.y/2) 
         enemy_center = Vector2(self.position.x + self.size.x/2, self.position.y + self.size.y/2)
         
