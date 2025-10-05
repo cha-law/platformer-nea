@@ -113,11 +113,17 @@ class AnimatableSprite(Sprite):
         self.crop = crop
         self.rotation = rotation
         self.frozen = False
+        self.loop = True
+        self.animation_start_time = time.time()
+        self.animation_done = False
 
-    def change_animation(self, new_anim: str):
+    def change_animation(self, new_anim: str, loop: bool = True):
         self.playing = new_anim
         self.current_frame = 0 # Reset frame back to 0
         self.num_frames = self.dict_num_frames[new_anim]
+        self.animation_start_time = time.time()
+        self.animation_done = False
+        self.loop = loop
 
     def reload(self) -> None:
         self.frames = extract_frames(self.images, self.frame_size, self.dict_num_frames, self.crop)
@@ -130,13 +136,28 @@ class AnimatableSprite(Sprite):
 
     def update_frame(self):
         if not self.frozen:
-            self.current_frame: int = int((time.time() - start_time) * self.fps % self.dict_num_frames[self.playing]) # type: ignore
-            if self.current_frame >= len(self.frames[self.playing]): self.current_frame = 0
+
+            number_frames: int = int((time.time() - self.animation_start_time) * self.fps)
+
+            if self.loop:
+                if self.num_frames > 0:
+                    number_frames %= self.num_frames
+                self.animation_done = False
+            else:
+                # Non-looping animation
+                if number_frames >= self.num_frames: # When animation has exceeded playing
+                    number_frames = self.num_frames - 1
+                    self.animation_done = True
+                else:
+                    self.animation_done = False
+
+            self.current_frame = max(0, number_frames)
+            current_frame_surface = self.frames[self.playing][self.current_frame]
 
             if self.direction == -1:
-                self.surface = pygame.transform.flip(self.frames[self.playing][self.current_frame], True, False)
+                self.surface = pygame.transform.flip(current_frame_surface, True, False)
             else:
-                self.surface = pygame.transform.rotate(self.frames[self.playing][self.current_frame], self.rotation)
+                self.surface = pygame.transform.rotate(current_frame_surface, self.rotation)
 
 class RoomTeleport(AnimatableSprite):
     def __init__(self, room_to: int, z_index: int = 1, rotation: int = 0):

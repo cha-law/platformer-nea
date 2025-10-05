@@ -1,4 +1,4 @@
-import pygame, time, asyncio
+import pygame, asyncio
 from pygame import Vector2
 import classes, characters, functions
 
@@ -35,7 +35,6 @@ async def main() -> None:
 
     # Time variables
     cooldown_timer = 0
-    dead_time = None
 
     # Audio
     pygame.mixer.set_num_channels(16)
@@ -140,10 +139,6 @@ async def main() -> None:
             # Rerender player
             renderer.objects.append(player)
 
-        # Change animation back to idle if player stops moving
-        if player.playing == "walk" or player.playing == "attack" or cooldown_timer == 100: 
-            player.change_animation("idle")
-
         if cooldown_timer >= 100:
             cooldown_timer = 0
             player.cooldown = False
@@ -154,6 +149,7 @@ async def main() -> None:
         current_speed = Vector2(0.2, 0.15)
 
         # Detect key pressed
+        moving = False # true when player is moving
         key_pressed = pygame.key.get_pressed()
         mouse_pressed = pygame.mouse.get_pressed()
 
@@ -166,16 +162,28 @@ async def main() -> None:
             renderer.clear()
 
         if key_pressed[pygame.K_w]:
-            player.move(Vector2(0, -current_speed.y) * delta_time) 
+            player.move(Vector2(0, -current_speed.y) * delta_time)
+            moving = True
         if key_pressed[pygame.K_s]:
-            player.move(Vector2(0, current_speed.y) * delta_time) 
+            player.move(Vector2(0, current_speed.y) * delta_time)
+            moving = True
         if key_pressed[pygame.K_a]:
-            player.move(Vector2(-current_speed.x, 0) * delta_time) 
+            player.move(Vector2(-current_speed.x, 0) * delta_time)
+            moving = True
         if key_pressed[pygame.K_d]:
             player.move(Vector2(current_speed.x, 0) * delta_time)
+            moving = True
 
         if mouse_pressed[0] or key_pressed[pygame.K_e]:
-            player.change_animation("attack")
+            player.change_animation("attack", False)
+
+        # Change animation to idle if player stops moving
+        if not moving and player.playing == "walk":
+            player.change_animation("idle")
+
+        # Change animation back to idle if one of these animations are done
+        if player.playing in ("attack", "block", "damage") and player.animation_done and not player.dead:
+            player.change_animation("idle")
 
         if key_pressed[pygame.K_SPACE] and player.dead:
             # Reset to first room
@@ -191,7 +199,7 @@ async def main() -> None:
             renderer.objects.append(player)
             player.lives = 3
             player.dead = False
-            dead_time = None
+            player.change_animation("idle")
 
         # Get object collisions
         object_collisions: list[classes.RenderableObject] = functions.get_collisions(renderer, player)
@@ -213,7 +221,7 @@ async def main() -> None:
 
                 if isinstance(object, classes.Enemy) and not player.cooldown and not player.dead and not player.playing == "block":
                     player.setLives(-object.damage)
-                    player.change_animation("damage")
+                    player.change_animation("damage", False)
                     if player.lives > 0:
                         sound_effects["hurt"].play()
                     else:
@@ -244,14 +252,8 @@ async def main() -> None:
         # Check if player is dead
         if player.lives <= 0:
             player.dead = True
-            player.change_animation("dead")
-
-            if not dead_time:
-                dead_time = time.time()
-            else:
-                if time.time() - dead_time >= 0.4 and player in renderer.objects:
-                    player.position = Vector2(0, 0)
-                    renderer.objects.remove(player)
+            if player.playing != "dead":
+                player.change_animation("dead", False)
 
         cooldown_timer += 1
 
