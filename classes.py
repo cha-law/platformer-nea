@@ -1,9 +1,8 @@
 from abc import ABC
-from typing import Optional, List
+from typing import Any, Optional, List
 from pygame import Surface, Vector2
 import pygame, time
 import asyncio
-
 import characters
 
 pygame.font.init()
@@ -50,6 +49,89 @@ class Renderer():
     def clear(self):
         self.objects = []
 
+class Menu():
+    def __init__(self):
+        self.page = 0
+        self.active = True
+        self.drawn = False
+        self.options: list[str] = ["PLAY", "COSMETICS", "OPTIONS", "CONTROLS", "QUIT"]
+        self.buttons: List[MenuButton] = []
+        self.selected_button = 0
+        self.up_pressed = False
+        self.down_pressed = False
+
+    def update(self, renderer: Renderer):
+        if not self.active:
+            return
+
+        # Update button states
+        for button in self.buttons:
+            if self.buttons[self.selected_button] == button:
+                print("highlighting button:", button.text)
+                button.color = pygame.Color(50, 50, 50)  # Highlight selected button
+                renderer.objects.remove(button) 
+                renderer.objects.append(button)
+            else:
+                button.color = pygame.Color(255, 255, 255)  # Reset color for unselected buttons
+                renderer.objects.remove(button) 
+                renderer.objects.append(button)
+
+    def draw(self, renderer: Renderer):
+        if not self.active:
+            return
+        
+        menu_elements: list[Text] = []
+        game_title = Text("KNIGHT'S QUEST", pygame.font.Font("assets/fonts/pixelify.ttf", 45), pygame.Color(255, 255, 255))
+        game_title.position = Vector2(525, 200)
+        menu_elements.append(game_title)
+
+        if self.page == 0:
+            if not self.buttons: # Create buttons
+                for i, option in enumerate(self.options):
+                    button = MenuButton(option)
+                    button.position = Vector2(600, 300 + i * 40)
+                    self.buttons.append(button)
+            # Draw buttons
+            for button in self.buttons:
+                renderer.objects.append(button)
+        
+        # Draw all elements
+        for element in menu_elements:
+            renderer.objects.append(element)
+
+        self.drawn = True
+
+    def handle_input(self, key_pressed: Any, renderer: Renderer) -> None:
+        if not self.active:
+            return
+
+        if key_pressed[pygame.K_DOWN] or key_pressed[pygame.K_s]:
+            if self.down_pressed: return
+            self.selected_button = (self.selected_button + 1) % len(self.options)
+            self.down_pressed = True
+        else:
+            self.down_pressed = False
+
+        if key_pressed[pygame.K_UP] or key_pressed[pygame.K_w]:
+            if self.up_pressed: return
+            self.selected_button = (self.selected_button - 1) % len(self.options)
+            self.up_pressed = True
+        else:
+            self.up_pressed = False
+
+        if key_pressed[pygame.K_RETURN]:
+            selected_option = self.options[self.selected_button]
+            if selected_option == "PLAY":
+                renderer.clear()
+                self.active = False
+                self.drawn = False
+            elif selected_option == "COSMETICS":
+                self.page = 1
+            elif selected_option == "OPTIONS":
+                self.page = 2
+            elif selected_option == "QUIT":
+                pygame.quit()
+
 class GameObject(ABC):
     def __init__(self):
         self.position = Vector2()
@@ -66,13 +148,9 @@ class Text(RenderableObject):
         self.font = font
         self.color = color
 
-    def draw(self, screen: Surface) -> None:
-        screen.blit(self.font.render(self.text, True, self.color), self.position)
-
 class MenuButton(Text):
-    def __init__(self, text: str, font: pygame.font.Font, color: pygame.Color, page: int):
-        super().__init__(text, font, color)
-        self.page = page
+    def __init__(self, text: str):
+        super().__init__(text, pygame.font.Font("assets/fonts/pixelify.ttf", 30), pygame.Color(255, 255, 255))
 
 class Sprite(RenderableObject):
     def __init__(self, image: str, object_type: str = "x", z_index: int = 1, collideable: bool = False):
@@ -92,7 +170,6 @@ class Sprite(RenderableObject):
 
     def draw(self, screen: Surface):
         sprite: Surface = pygame.transform.scale(self.surface, self.size)
-        # 
         screen.blit(sprite, self.position)
 
     def flip(self):
@@ -360,14 +437,6 @@ class Player(AnimatableSprite):
 
     def setLives(self, life_multiplier: int):
         self.lives += life_multiplier
-
-
-class ButtonComponent(Sprite):
-    def __init__(self, image: str):
-        super().__init__(image)
-        self.active = False  
-
-
 
 
 # FUNCTIONS

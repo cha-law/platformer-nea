@@ -12,7 +12,7 @@ async def main() -> None:
 
     # GAME VARIABLES
     stats: classes.GameStats = classes.GameStats(0)
-    player: classes.Player = classes.Player(characters.knight_images, characters.knight_num_frames)
+    player: classes.Player = classes.Player(characters.knight_images, characters.knight_num_frames) # type: ignore
     spawn: classes.Spawn = classes.Spawn()
 
     # Level Variables
@@ -22,15 +22,9 @@ async def main() -> None:
     room_debounce = False   
 
     # Menu Variables
-    menu_active: bool = True
-    selected_menu_button: str = "PLAY"
-    selected_menu_index: int = 0
-    menu_options: list[str] = ["PLAY", "COSMETICS", "OPTIONS", "CONTROLS", "QUIT"]
-    menu_down_pressed: bool = False
-    menu_up_pressed: bool = False
+    menu = classes.Menu()
 
     # Drawn Variables
-    menu_drawn: bool = False
     level_drawn: bool = False
 
     # Time variables
@@ -69,57 +63,19 @@ async def main() -> None:
                 running = False
 
         # When the menu is active
-        if menu_active:
-            if not menu_drawn:
+        if menu.active:
+            if not menu.drawn:
                 spawn.position = Vector2(1300/2, 600)
                 player.position = spawn.position
                 functions.draw_level("menu.csv", renderer, spawn)
-                menu_drawn = True
                 level_drawn = False
+                menu.draw(renderer)
 
-            functions.draw_menu(renderer, menu_options, selected_menu_button)
+            menu.update(renderer)
 
             # Get inputs
             key_pressed = pygame.key.get_pressed()
-
-            if key_pressed[pygame.K_RETURN]:
-                if selected_menu_button == "PLAY":
-                    menu_active = False
-                    renderer.clear()
-                elif selected_menu_button == "COSMETICS":
-                    print("cosmetics")
-                elif selected_menu_button == "OPTIONS":
-                    print("options")
-                elif selected_menu_button == "CONTROLS":
-                    print("controls")
-                elif selected_menu_button == "QUIT":
-                    running = False
-
-            # Handle inputs for moving between menu options
-            if key_pressed[pygame.K_s] or key_pressed[pygame.K_DOWN]:
-                if not menu_down_pressed: # Stop function if down was already pressed
-                    selected_menu_index += 1
-
-                    if selected_menu_index >= len(menu_options):
-                        selected_menu_index = 0
-
-                    selected_menu_button = menu_options[selected_menu_index]
-                    menu_down_pressed = True
-            else:
-                menu_down_pressed = False
-
-            if key_pressed[pygame.K_w] or key_pressed[pygame.K_UP]:
-                if not menu_up_pressed: # Stop function if up was already pressed
-                    selected_menu_index -= 1
-
-                    if selected_menu_index < 0:
-                        selected_menu_index = len(menu_options) - 1
-
-                    selected_menu_button = menu_options[selected_menu_index]
-                    menu_up_pressed = True
-            else:
-                menu_up_pressed = False
-
+            menu.handle_input(key_pressed, renderer)
 
             renderer.update(player)
 
@@ -134,7 +90,7 @@ async def main() -> None:
             functions.draw_level(f"worlds/{world}/l{level}/r{room}.csv", renderer, spawn)
             player.position = spawn.position
             level_drawn = True
-            menu_drawn = False
+            menu.drawn = False
 
             # Rerender player
             renderer.objects.append(player)
@@ -158,7 +114,7 @@ async def main() -> None:
             current_speed = Vector2(0.1, 0.075)
 
         if key_pressed[pygame.K_m]:
-            menu_active = True
+            menu.active = True
             renderer.clear()
 
         if key_pressed[pygame.K_w]:
@@ -182,7 +138,10 @@ async def main() -> None:
             player.change_animation("idle")
 
         # Change animation back to idle if one of these animations are done
-        if player.playing in ("attack", "block", "damage") and player.animation_done and not player.dead:
+        if player.playing in ("attack", "damage") and player.animation_done and not player.dead:
+            player.change_animation("idle")
+
+        if player.playing == "block" and not key_pressed[pygame.K_q] and not player.dead:
             player.change_animation("idle")
 
         if key_pressed[pygame.K_SPACE] and player.dead:
@@ -207,7 +166,7 @@ async def main() -> None:
 
         async with asyncio.TaskGroup() as attack:
             for object in attack_collisions:
-                if player.playing == "attack":
+                if player.playing == "attack" and player.current_frame > 2:
                     attack.create_task(object.setLives(-1))
                     if object.lives <= 0:
                         renderer.objects.remove(object)
@@ -248,6 +207,12 @@ async def main() -> None:
                         player.position = spawn.position
                         player.reload()
 
+                if object.object_type == "end":
+                    title_font = pygame.font.Font("assets/fonts/pixelify.ttf", 50)
+                    text = classes.Text("LEVEL COMPLETE!", title_font, pygame.Color(255, 255, 255))
+                    text.position = Vector2(475, 170)
+                    renderer.objects.append(text)
+                    
                 if object.collideable:
                     functions.manage_player_colliding(player, object)
 

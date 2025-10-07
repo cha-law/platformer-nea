@@ -13,7 +13,7 @@ knight_num_frames = {
     "idle": 5,
     "walk": 8,
     "attack": 6,
-    "block": 2,
+    "block": 1,
     "damage": 1,
     "dead": 7
 }
@@ -92,5 +92,13 @@ arrow_images = {
 }
 
 arrow_num_frames = {
+    "idle": 5
+}
+
+flag_images = {
+    "idle": "assets/images/misc/flag.png"
+}
+
+flag_num_frames = {
     "idle": 5
 }

@@ -1,5 +1,5 @@
-from typing import Any
-import pygame, csv, random
+from typing import Any, Callable
+import pygame, csv, random, asyncio
 from pygame import Vector2
 import classes, characters
 
@@ -65,6 +65,8 @@ def draw_level(file_path: str, renderer: classes.Renderer, spawn: classes.Spawn)
                 additional_objects.append({"object_class": classes.AnimatableSprite(characters.life_images, characters.life_num_frames, Vector2(16), False, "life"), "position": Vector2(x, y), "size": Vector2(25), "renderer": renderer})
             if "fence" in objects:
                 additional_objects.append({"object_class": classes.Sprite("assets/images/level_blocks/fences/fence.png", "fence", 1, True), "position": Vector2(x, y), "size": Vector2(30, 30), "renderer": renderer})
+            if "flag" in objects:
+                additional_objects.append({"object_class": classes.AnimatableSprite(characters.flag_images, characters.flag_num_frames, Vector2(60), False, "end"), "position": Vector2(x, y), "size": Vector2(60), "renderer": renderer})
             
             # Check for exits
             for  obj in objects:
@@ -88,27 +90,32 @@ def draw_level(file_path: str, renderer: classes.Renderer, spawn: classes.Spawn)
     for object in additional_objects:
         create_object(object["object_class"], object["position"], object["size"], object["renderer"]) # type: ignore
 
-def draw_menu(renderer: classes.Renderer, menu_options: list[str], selected_button: str) -> None:
+def draw_cosmetics_menu(renderer: classes.Renderer, cosmetics: dict[str, bool]) -> None:
     menu_elements: list[classes.Text] = []
 
     # Create title
     title_font = pygame.font.Font("assets/fonts/pixelify.ttf", 50)
     button_font = pygame.font.Font("assets/fonts/pixelify.ttf", 35)
-    game_title = classes.Text("Game Title", title_font, pygame.Color(255, 255, 255))
+    game_title = classes.Text("COSMETICS", title_font, pygame.Color(255, 255, 255))
     game_title.position = Vector2(550, 170)
     menu_elements.append(game_title)
+    selected_button = list(cosmetics.keys())[0]
 
     y = 300
     colour = pygame.Color(255, 255, 255)
 
-    for item in menu_options:
+    for item in cosmetics:
         if selected_button == item:
             colour = pygame.Color(50, 50, 50)
         else:
             colour = pygame.Color(255, 255, 255)
 
-        button = classes.Text(item, button_font, colour)
-        button.position = Vector2(550, y)
+        if cosmetics[item]:
+            button = classes.Text(f"{item} (Owned)", button_font, colour)
+        else:
+            button = classes.Text(f"{item} (100 coins)", button_font, colour)
+
+        button.position = Vector2(500, y)
         menu_elements.append(button)
         y += 40
 
@@ -207,3 +214,12 @@ def get_attack_collisions(renderer: classes.Renderer, player: classes.Player):
 
     return collisions_list
 
+
+async def wait(time: int, function: Callable) -> None: # type: ignore
+    await asyncio.sleep(time)
+    function()
+
+def new_level(renderer: classes.Renderer, player: classes.Player, spawn: classes.Spawn, stats: classes.GameStats, world: int, level: int) -> None:
+    renderer.objects.clear()
+    draw_level(f"worlds/{world}/l{level}/r1.csv", renderer, spawn)
+    player.position = spawn.position
