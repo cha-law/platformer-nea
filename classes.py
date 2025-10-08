@@ -54,11 +54,16 @@ class Menu():
         self.page = 0
         self.active = True
         self.drawn = False
-        self.options: list[str] = ["PLAY", "COSMETICS", "OPTIONS", "CONTROLS", "QUIT"]
+        self.options: dict[int, list[str]] = {
+            0: ["PLAY", "COSMETICS", "OPTIONS", "CONTROLS", "QUIT"],
+            1: ["KNIGHT", "KNIGHT 2", "EXIT"],
+            2: ["GAME VOLUME", "EXIT"]
+        }
         self.buttons: List[MenuButton] = []
         self.selected_button = 0
         self.up_pressed = False
         self.down_pressed = False
+        self.enter_pressed = False
 
     def update(self, renderer: Renderer):
         if not self.active:
@@ -66,15 +71,17 @@ class Menu():
 
         # Update button states
         for button in self.buttons:
+            renderer.objects.remove(button)
+
+        self.create_buttons(renderer)
+
+        for button in self.buttons:
             if self.buttons[self.selected_button] == button:
-                print("highlighting button:", button.text)
                 button.color = pygame.Color(50, 50, 50)  # Highlight selected button
-                renderer.objects.remove(button) 
-                renderer.objects.append(button)
             else:
                 button.color = pygame.Color(255, 255, 255)  # Reset color for unselected buttons
-                renderer.objects.remove(button) 
-                renderer.objects.append(button)
+            
+            renderer.objects.append(button)
 
     def draw(self, renderer: Renderer):
         if not self.active:
@@ -85,15 +92,10 @@ class Menu():
         game_title.position = Vector2(525, 200)
         menu_elements.append(game_title)
 
-        if self.page == 0:
-            if not self.buttons: # Create buttons
-                for i, option in enumerate(self.options):
-                    button = MenuButton(option)
-                    button.position = Vector2(600, 300 + i * 40)
-                    self.buttons.append(button)
-            # Draw buttons
-            for button in self.buttons:
-                renderer.objects.append(button)
+        buttons_array = self.create_buttons(renderer)
+        
+        for item in buttons_array:
+            menu_elements.append(item)
         
         # Draw all elements
         for element in menu_elements:
@@ -101,26 +103,43 @@ class Menu():
 
         self.drawn = True
 
+    def create_buttons(self, renderer: Renderer):
+        self.buttons = []
+        buttons_array: list[MenuButton] = []
+
+        for i, option in enumerate(self.options[self.page]):
+            button = MenuButton(option)
+            button.position = Vector2(600, 300 + i * 40)
+            self.buttons.append(button)
+        
+        for button in self.buttons:
+            buttons_array.append(button)
+        return buttons_array
+
     def handle_input(self, key_pressed: Any, renderer: Renderer) -> None:
         if not self.active:
             return
 
         if key_pressed[pygame.K_DOWN] or key_pressed[pygame.K_s]:
             if self.down_pressed: return
-            self.selected_button = (self.selected_button + 1) % len(self.options)
+            self.selected_button = (self.selected_button + 1) % len(self.options[self.page])
             self.down_pressed = True
         else:
             self.down_pressed = False
 
         if key_pressed[pygame.K_UP] or key_pressed[pygame.K_w]:
             if self.up_pressed: return
-            self.selected_button = (self.selected_button - 1) % len(self.options)
+            self.selected_button = (self.selected_button - 1) % len(self.options[self.page])
             self.up_pressed = True
         else:
             self.up_pressed = False
 
         if key_pressed[pygame.K_RETURN]:
-            selected_option = self.options[self.selected_button]
+            if self.enter_pressed: return
+
+            selected_option = self.options[self.page][self.selected_button]
+            self.old_page = self.page
+            
             if selected_option == "PLAY":
                 renderer.clear()
                 self.active = False
@@ -129,8 +148,19 @@ class Menu():
                 self.page = 1
             elif selected_option == "OPTIONS":
                 self.page = 2
+            elif selected_option == "CONTROLS":
+                print("controls")
+            elif selected_option == "EXIT":
+                self.page = 0
             elif selected_option == "QUIT":
                 pygame.quit()
+
+            if self.old_page != self.page: # make selected button the top button if the page is changed
+                self.selected_button = 0
+
+            self.enter_pressed = True # prevent multiple enters from being registeres
+        else:
+            self.enter_pressed = False
 
 class GameObject(ABC):
     def __init__(self):
@@ -243,8 +273,8 @@ class RoomTeleport(AnimatableSprite):
         self.room_to = room_to
 
 class Enemy(AnimatableSprite):
-    def __init__(self, images: dict[str, str], num_frames: dict[str, int], frame_size: Vector2 = Vector2(64, 64), crop: bool = False, object_type: str = "x", z_index: int = 1, damage: int = 1):
-        super().__init__(images, num_frames, frame_size, crop, object_type, z_index, False)
+    def __init__(self, images: dict[str, str], num_frames: dict[str, int], frame_size: Vector2 = Vector2(64, 64), crop: bool = False, object_type: str = "x", z_index: int = 1, damage: int = 1, collideable: bool = False):
+        super().__init__(images, num_frames, frame_size, crop, object_type, z_index, collideable)
         self.lives = 3
         self.tracking = False
         self.damage = damage
@@ -259,6 +289,7 @@ class Enemy(AnimatableSprite):
             if self.attack_cooldown: # Return if the enemy is on cooldown
                 return
             pygame.mixer.Sound("assets/sound/hit_enemy.wav").play().set_volume(0.3)
+            self.change_animation("damage", False)
             self.lives += life_multiplier # Remove life
             self.attack_cooldown = True # Prevent enemy from being attacked again
 
@@ -408,6 +439,16 @@ class Big_Zombie(Enemy):
             
             if self.steps <= -40:
                 self.direction = 1
+
+class Tower(Enemy):
+    def __init__(self, object_type: str = "x", z_index: int = 1):
+        super().__init__(characters.tower_images, characters.tower_num_frames, Vector2(70, 130), False, object_type, z_index, 0, collideable=True)
+        self.lives = 12
+        self.tracking = False
+
+    def update_movement(self):
+        if self.lives <= 0 and self.playing != "dead":
+            self.change_animation("dead", False)
 
 class Player(AnimatableSprite):
     def __init__(self, images: dict[str, str], dict_num_frames: dict[str, int], frame_size: Vector2 = Vector2(64, 64)):

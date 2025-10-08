@@ -77,6 +77,16 @@ bigzombie_num_frames = {
     "damage": 4
 }
 
+tower_images = {
+    "idle": "assets/images/enemies/tower/tower1.png",
+    "dead": "assets/images/enemies/tower/destroyed.png"
+}
+
+tower_num_frames = {
+    "idle": 6,
+    "dead": 1
+}
+
 # MISC
 
 life_images = {

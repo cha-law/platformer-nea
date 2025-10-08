@@ -168,10 +168,8 @@ async def main() -> None:
             for object in attack_collisions:
                 if player.playing == "attack" and player.current_frame > 2:
                     attack.create_task(object.setLives(-1))
-                    if object.lives <= 0:
+                    if object.lives <= 0 and not isinstance(object, classes.Tower):
                         renderer.objects.remove(object)
-                    else:
-                        object.change_animation("damage", False)
 
         for object in object_collisions:
             if isinstance(object, classes.Sprite):
@@ -180,7 +178,7 @@ async def main() -> None:
                     sound_effects["coin"].play()
                     renderer.objects.remove(object) # type:ignore
 
-                if isinstance(object, classes.Enemy) and not player.cooldown and not player.dead and not player.playing == "block":
+                if isinstance(object, classes.Enemy) and not player.cooldown and not player.dead and not player.playing == "block" and object.damage > 0:
                     player.setLives(-object.damage)
                     player.change_animation("damage", False)
                     object.change_animation("attack", False)
@@ -212,6 +210,11 @@ async def main() -> None:
                     text = classes.Text("LEVEL COMPLETE!", title_font, pygame.Color(255, 255, 255))
                     text.position = Vector2(475, 170)
                     renderer.objects.append(text)
+
+                    level += 1
+                    room = 1
+                    room_debounce = True
+                    functions.new_level(renderer, player, spawn, stats, world, level)
                     
                 if object.collideable:
                     functions.manage_player_colliding(player, object)

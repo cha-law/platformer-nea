@@ -67,6 +67,8 @@ def draw_level(file_path: str, renderer: classes.Renderer, spawn: classes.Spawn)
                 additional_objects.append({"object_class": classes.Sprite("assets/images/level_blocks/fences/fence.png", "fence", 1, True), "position": Vector2(x, y), "size": Vector2(30, 30), "renderer": renderer})
             if "flag" in objects:
                 additional_objects.append({"object_class": classes.AnimatableSprite(characters.flag_images, characters.flag_num_frames, Vector2(60), False, "end"), "position": Vector2(x, y), "size": Vector2(60), "renderer": renderer})
+            if "tower" in objects:
+                additional_objects.append({"object_class": classes.Tower("enemy", 2), "position": Vector2(x, y), "size": Vector2(105, 195), "renderer": renderer})
             
             # Check for exits
             for  obj in objects:
@@ -89,39 +91,6 @@ def draw_level(file_path: str, renderer: classes.Renderer, spawn: classes.Spawn)
     
     for object in additional_objects:
         create_object(object["object_class"], object["position"], object["size"], object["renderer"]) # type: ignore
-
-def draw_cosmetics_menu(renderer: classes.Renderer, cosmetics: dict[str, bool]) -> None:
-    menu_elements: list[classes.Text] = []
-
-    # Create title
-    title_font = pygame.font.Font("assets/fonts/pixelify.ttf", 50)
-    button_font = pygame.font.Font("assets/fonts/pixelify.ttf", 35)
-    game_title = classes.Text("COSMETICS", title_font, pygame.Color(255, 255, 255))
-    game_title.position = Vector2(550, 170)
-    menu_elements.append(game_title)
-    selected_button = list(cosmetics.keys())[0]
-
-    y = 300
-    colour = pygame.Color(255, 255, 255)
-
-    for item in cosmetics:
-        if selected_button == item:
-            colour = pygame.Color(50, 50, 50)
-        else:
-            colour = pygame.Color(255, 255, 255)
-
-        if cosmetics[item]:
-            button = classes.Text(f"{item} (Owned)", button_font, colour)
-        else:
-            button = classes.Text(f"{item} (100 coins)", button_font, colour)
-
-        button.position = Vector2(500, y)
-        menu_elements.append(button)
-        y += 40
-
-    # Load all elements
-    for item in menu_elements:
-        renderer.objects.append(item)
 
 def draw_coins(renderer: classes.Renderer, stats: classes.GameStats):
     coin_symbol = classes.Sprite("assets/images/misc/coin.png")
@@ -161,13 +130,13 @@ def is_colliding(obj1: classes.RenderableObject, obj2: classes.RenderableObject)
 def player_attack_colliding(plr: classes.Player, obj: classes.RenderableObject) -> bool:
     if plr.direction == -1:
         attack_direction = (
-            plr.position.x - 5 < obj.position.x + obj.size.x and # hitbox extended for attack
+            plr.position.x - 10 < obj.position.x + obj.size.x and # hitbox extended for attack
             plr.position.x + plr.size.x > obj.position.x + 20
         )
     else:
         attack_direction = (
             plr.position.x < obj.position.x + obj.size.x - 20 and
-            plr.position.x + plr.size.x + 5 > obj.position.x # hitbox extended for attack
+            plr.position.x + plr.size.x + 10 > obj.position.x # hitbox extended for attack
         )
 
     return (
