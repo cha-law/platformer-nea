@@ -1,20 +1,66 @@
 # PLAYERS 
 
 knight_images = {
-    "idle": "assets/images/player/idle.png",
-    "walk": "assets/images/player/walk.png",
-    "attack": "assets/images/player/attack.png",
-    "block": "assets/images/player/block.png",
-    "damage": "assets/images/player/damage.png",
-    "dead": "assets/images/player/dead.png",
+    "idle": "assets/images/player/knight/idle.png",
+    "walk": "assets/images/player/knight/walk.png",
+    "attack": "assets/images/player/knight/attack.png",
+    "block": "assets/images/player/knight/block.png",
+    "dead": "assets/images/player/knight/dead.png",
 }
 
 knight_num_frames = {
     "idle": 5,
     "walk": 8,
     "attack": 6,
-    "block": 1,
-    "damage": 1,
+    "block": 2,
+    "dead": 7
+}
+
+warrior_images = {
+    "idle": "assets/images/player/warrior/idle.png",
+    "walk": "assets/images/player/warrior/walk.png",
+    "attack": "assets/images/player/warrior/attack.png",
+    "block": "assets/images/player/warrior/block.png",
+    "dead": "assets/images/player/warrior/dead.png",
+}
+
+warrior_num_frames = {
+    "idle": 5,
+    "walk": 8,
+    "attack": 6,
+    "block": 2,
+    "dead": 7
+}
+
+darkknight_images = {
+    "idle": "assets/images/player/darkknight/idle.png",
+    "walk": "assets/images/player/darkknight/walk.png",
+    "attack": "assets/images/player/darkknight/attack.png",
+    "block": "assets/images/player/darkknight/block.png",
+    "dead": "assets/images/player/darkknight/dead.png",
+}
+
+darkknight_num_frames = {
+    "idle": 5,
+    "walk": 8,
+    "attack": 6,
+    "block": 2,
+    "dead": 7
+}
+
+goldknight_images = {
+    "idle": "assets/images/player/goldknight/idle.png",
+    "walk": "assets/images/player/goldknight/walk.png",
+    "attack": "assets/images/player/goldknight/attack.png",
+    "block": "assets/images/player/goldknight/block.png",
+    "dead": "assets/images/player/goldknight/dead.png",
+}
+
+goldknight_num_frames = {
+    "idle": 5,
+    "walk": 8,
+    "attack": 6,
+    "block": 2,
     "dead": 7
 }
 

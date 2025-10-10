@@ -12,6 +12,7 @@ start_time: float = time.time()
 class GameStats():
     def __init__(self, coins: int):
         self.coins = coins
+        self.selected_character = "knight"
 
     def add_coin(self):
         self.coins += 1
@@ -56,14 +57,16 @@ class Menu():
         self.drawn = False
         self.options: dict[int, list[str]] = {
             0: ["PLAY", "COSMETICS", "OPTIONS", "CONTROLS", "QUIT"],
-            1: ["KNIGHT", "KNIGHT 2", "EXIT"],
-            2: ["GAME VOLUME", "EXIT"]
+            1: ["KNIGHT", "WARRIOR (100 COINS)", "DARK KNIGHT (200 COINS)", "GOLD KNIGHT (500 COINS)", "EXIT"],
+            2: ["GAME VOLUME", "EXIT"],
+            3: ["MOVEMENT: WASD", "ATTACK: E", "BLOCK: Q", "MENU: M", "EXIT"]
         }
         self.buttons: List[MenuButton] = []
         self.selected_button = 0
         self.up_pressed = False
         self.down_pressed = False
         self.enter_pressed = False
+        self.extra_text: Optional[Text] = None
 
     def update(self, renderer: Renderer):
         if not self.active:
@@ -115,8 +118,16 @@ class Menu():
         for button in self.buttons:
             buttons_array.append(button)
         return buttons_array
+    
+    def draw_extra_text(self, renderer: Renderer, text: str):
+        if self.extra_text != None:
+            renderer.objects.remove(self.extra_text) # type: ignore
 
-    def handle_input(self, key_pressed: Any, renderer: Renderer) -> None:
+        self.extra_text = Text(text, pygame.font.Font("assets/fonts/pixelify.ttf", 30), pygame.Color(255, 255, 255))
+        self.extra_text.position = Vector2(600, 500)
+        renderer.objects.append(self.extra_text)
+
+    def handle_input(self, key_pressed: Any, renderer: Renderer, stats: GameStats, player: "Player") -> None:
         if not self.active:
             return
 
@@ -144,12 +155,45 @@ class Menu():
                 renderer.clear()
                 self.active = False
                 self.drawn = False
+                self.extra_text = None
             elif selected_option == "COSMETICS":
                 self.page = 1
             elif selected_option == "OPTIONS":
                 self.page = 2
             elif selected_option == "CONTROLS":
-                print("controls")
+                self.page = 3
+            elif selected_option == "KNIGHT":
+                stats.selected_character = "knight"
+                player.change_image(characters.knight_images, characters.knight_num_frames)
+                self.draw_extra_text(renderer, "KNIGHT SELECTED!")
+                
+            elif selected_option == "WARRIOR (100 COINS)":
+                if stats.coins >= 100:
+                    stats.selected_character = "warrior"
+                    player.change_image(characters.warrior_images, characters.warrior_num_frames)
+                    stats.coins -= 100
+                    self.draw_extra_text(renderer, "WARRIOR SELECTED!")
+                else:
+                    self.draw_extra_text(renderer, "NOT ENOUGH COINS!")
+
+            elif selected_option == "DARK KNIGHT (200 COINS)":
+                if stats.coins >= 200:
+                    stats.selected_character = "dark_knight"
+                    player.change_image(characters.darkknight_images, characters.darkknight_num_frames)
+                    stats.coins -= 200
+                    self.draw_extra_text(renderer, "DARK KNIGHT SELECTED!")
+                else:
+                    self.draw_extra_text(renderer, "NOT ENOUGH COINS!")
+
+            elif selected_option == "GOLD KNIGHT (500 COINS)":
+                if stats.coins >= 500:
+                    stats.selected_character = "gold_knight"
+                    player.change_image(characters.goldknight_images, characters.goldknight_num_frames)
+                    stats.coins -= 500
+                    self.draw_extra_text(renderer, "GOLD KNIGHT SELECTED!")
+                else:
+                    self.draw_extra_text(renderer, "NOT ENOUGH COINS!")
+
             elif selected_option == "EXIT":
                 self.page = 0
             elif selected_option == "QUIT":
@@ -260,6 +304,10 @@ class AnimatableSprite(Sprite):
                     self.animation_done = False
 
             self.current_frame = max(0, number_frames)
+
+            if self.playing == "block":
+                self.current_frame = 1
+
             current_frame_surface = self.frames[self.playing][self.current_frame]
 
             if self.direction == -1:
@@ -474,7 +522,13 @@ class Player(AnimatableSprite):
             if self.direction * move.x < 0: self.direction *= -1
 
             if self.playing == "idle":
-                self.playing = "walk"        
+                self.playing = "walk"   
+
+    def change_image(self, new_images: dict[str, str], new_num_frames: dict[str, int], new_frame_size: Vector2 = Vector2(64, 64)):
+        self.images = new_images
+        self.dict_num_frames = new_num_frames
+        self.frame_size = new_frame_size
+        self.reload()  
 
     def setLives(self, life_multiplier: int):
         self.lives += life_multiplier

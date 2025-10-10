@@ -75,7 +75,7 @@ async def main() -> None:
 
             # Get inputs
             key_pressed = pygame.key.get_pressed()
-            menu.handle_input(key_pressed, renderer)
+            menu.handle_input(key_pressed, renderer, stats, player)
 
             renderer.update(player)
 
