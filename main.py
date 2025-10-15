@@ -44,11 +44,6 @@ async def main() -> None:
         "heal": pygame.mixer.Sound("assets/sound/heal.mp3"),
     }
 
-    sound_effects["coin"].set_volume(0.1)
-    sound_effects["hurt"].set_volume(0.5)
-    sound_effects["death"].set_volume(0.8)
-    sound_effects["heal"].set_volume(0.2)
-
     # Set player position
     player.position = spawn.position
 
@@ -62,10 +57,12 @@ async def main() -> None:
             if event.type == pygame.QUIT:
                 running = False
 
+        functions.draw_coins(renderer, stats)
+
         # When the menu is active
         if menu.active:
             if not menu.drawn:
-                spawn.position = Vector2(1300/2, 600)
+                spawn.position = Vector2(1300/ 2, 600)
                 player.position = spawn.position
                 functions.draw_level("menu.csv", renderer, spawn)
                 level_drawn = False
@@ -100,7 +97,6 @@ async def main() -> None:
             player.cooldown = False
 
         functions.draw_lives(renderer, player)
-        functions.draw_coins(renderer, stats)
 
         current_speed = Vector2(0.2, 0.15)
 
@@ -175,7 +171,7 @@ async def main() -> None:
             if isinstance(object, classes.Sprite):
                 if object.object_type == "coin":
                     stats.add_coin()
-                    sound_effects["coin"].play()
+                    sound_effects["coin"].play().set_volume(0.1 * stats.volume)
                     renderer.objects.remove(object) # type:ignore
 
                 if isinstance(object, classes.Enemy) and not player.cooldown and not player.dead and not player.playing == "block" and object.damage > 0:
@@ -183,9 +179,9 @@ async def main() -> None:
                     player.change_animation("damage", False)
                     object.change_animation("attack", False)
                     if player.lives > 0:
-                        sound_effects["hurt"].play()
+                        sound_effects["hurt"].play().set_volume(0.5 * stats.volume)
                     else:
-                        sound_effects["death"].play()
+                        sound_effects["death"].play().set_volume(0.8 * stats.volume)
 
                     player.cooldown = True
                     cooldown_timer = 0
@@ -193,7 +189,7 @@ async def main() -> None:
                 if object.object_type == "life" and not player.dead:
                     player.setLives(1)
                     renderer.objects.remove(object)
-                    sound_effects["heal"].play()
+                    sound_effects["heal"].play().set_volume(0.2 * stats.volume)
 
                 if isinstance(object, classes.RoomTeleport) and object.object_type == "exit":
                     if not room_debounce:

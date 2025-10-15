@@ -13,6 +13,7 @@ class GameStats():
     def __init__(self, coins: int):
         self.coins = coins
         self.selected_character = "knight"
+        self.volume: float = 1.0
 
     def add_coin(self):
         self.coins += 1
@@ -58,7 +59,7 @@ class Menu():
         self.options: dict[int, list[str]] = {
             0: ["PLAY", "COSMETICS", "OPTIONS", "CONTROLS", "QUIT"],
             1: ["KNIGHT", "WARRIOR (100 COINS)", "DARK KNIGHT (200 COINS)", "GOLD KNIGHT (500 COINS)", "EXIT"],
-            2: ["GAME VOLUME", "EXIT"],
+            2: ["GAME VOLUME: 1.0", "EXIT"],
             3: ["MOVEMENT: WASD", "ATTACK: E", "BLOCK: Q", "MENU: M", "EXIT"]
         }
         self.buttons: List[MenuButton] = []
@@ -193,6 +194,14 @@ class Menu():
                     self.draw_extra_text(renderer, "GOLD KNIGHT SELECTED!")
                 else:
                     self.draw_extra_text(renderer, "NOT ENOUGH COINS!")
+
+            elif selected_option == f"GAME VOLUME: {stats.volume}":
+                stats.volume += 0.5
+                stats.volume = round(stats.volume, 1)
+                if stats.volume > 8:
+                    stats.volume = 1.0
+
+                self.options[2][0] = f"GAME VOLUME: {stats.volume}"
 
             elif selected_option == "EXIT":
                 self.page = 0
