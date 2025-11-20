@@ -341,11 +341,11 @@ class Enemy(AnimatableSprite):
     def update_movement(self):
         ...
 
-    async def setLives(self, life_multiplier: int):
+    async def set_lives(self, life_multiplier: int):
         async with self._lock:
             if self.attack_cooldown: # Return if the enemy is on cooldown
                 return
-            pygame.mixer.Sound("assets/sound/hit_enemy.wav").play().set_volume(0.3)
+            if self.lives > 0: pygame.mixer.Sound("assets/sound/hit_enemy.wav").play().set_volume(0.1)
             self.change_animation("damage", False)
             self.lives += life_multiplier # Remove life
             self.attack_cooldown = True # Prevent enemy from being attacked again
@@ -381,7 +381,7 @@ class Small_Skeleton(Enemy):
     def __init__(self, object_type: str = "x", z_index: int = 1):
         super().__init__(characters.smallskeleton_images, characters.smallskeleton_num_frames, Vector2(64, 32), False, object_type, z_index)
         self.lives = 1
-        self.speed = 0.6
+        self.speed = 0.5
         self.steps = 0
         self.range = 175
         self.tracking = True
@@ -421,7 +421,7 @@ class Big_Skeleton(Enemy):
     def __init__(self, object_type: str = "x", z_index: int = 1):
         super().__init__(characters.bigskeleton_images, characters.bigskeleton_num_frames, Vector2(64, 48), False, object_type, z_index, 2)
         self.lives = 3
-        self.speed = 0.3
+        self.speed = 0.2
         self.steps = 0
         self.range = 300
         self.tracking = True
@@ -435,7 +435,7 @@ class Big_Skeleton(Enemy):
         
         if player_center.distance_to(enemy_center) <= self.range and not player.dead:
             # Player is in range
-            self.speed = 0.9
+            self.speed = 0.7
             direction = (player_center - enemy_center).normalize() # Direction to player from enemy
             self.position.x += round(self.speed * direction.x) 
             self.position.y += round(self.speed * direction.y)
@@ -461,7 +461,7 @@ class Big_Zombie(Enemy):
     def __init__(self, object_type: str = "x", z_index: int = 1):
         super().__init__(characters.bigzombie_images, characters.bigzombie_num_frames, Vector2(32), False, object_type, z_index, 2)
         self.lives = 5
-        self.speed = 0.3
+        self.speed = 0.2
         self.steps = 0
         self.range = 300
         self.tracking = True
@@ -475,7 +475,7 @@ class Big_Zombie(Enemy):
         
         if player_center.distance_to(enemy_center) <= self.range and not player.dead:
             # Player is in range
-            self.speed = 0.9
+            self.speed = 0.6
             direction = (player_center - enemy_center).normalize() # Direction to player from enemy
             self.position.x += round(self.speed * direction.x) 
             self.position.y += round(self.speed * direction.y)
@@ -500,7 +500,7 @@ class Big_Zombie(Enemy):
 class Tower(Enemy):
     def __init__(self, object_type: str = "x", z_index: int = 1):
         super().__init__(characters.tower_images, characters.tower_num_frames, Vector2(70, 130), False, object_type, z_index, 0, collideable=True)
-        self.lives = 12
+        self.lives = 8
         self.tracking = False
 
     def update_movement(self):

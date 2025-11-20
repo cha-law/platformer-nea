@@ -130,19 +130,19 @@ def is_colliding(obj1: classes.RenderableObject, obj2: classes.RenderableObject)
 def player_attack_colliding(plr: classes.Player, obj: classes.RenderableObject) -> bool:
     if plr.direction == -1:
         attack_direction = (
-            plr.position.x - 10 < obj.position.x + obj.size.x and # hitbox extended for attack
+            plr.position.x - 15 < obj.position.x + obj.size.x and # hitbox extended for attack
             plr.position.x + plr.size.x > obj.position.x + 20
         )
     else:
         attack_direction = (
             plr.position.x < obj.position.x + obj.size.x - 20 and
-            plr.position.x + plr.size.x + 10 > obj.position.x # hitbox extended for attack
+            plr.position.x + plr.size.x + 15 > obj.position.x # hitbox extended for attack
         )
 
     return (
         attack_direction and
-        plr.position.y < obj.position.y + obj.size.y - 30 and
-        plr.position.y + plr.size.y > obj.position.y + 20
+        plr.position.y < obj.position.y + obj.size.y + 10 and
+        plr.position.y + plr.size.y > obj.position.y - 10
     )
 
 def manage_player_colliding(plr: classes.Player, obj2: classes.RenderableObject) -> None:
@@ -192,3 +192,43 @@ def new_level(renderer: classes.Renderer, player: classes.Player, spawn: classes
     renderer.objects.clear()
     draw_level(f"worlds/{world}/l{level}/r1.csv", renderer, spawn)
     player.position = spawn.position
+
+def spawn_random_enemy(renderer: classes.Renderer):
+    # Get random enemy
+    enemy_type: int = random.randint(1, 30)
+
+    x: int = 0
+    y: int = 0
+
+    if enemy_type == 1:
+        new_enemy = classes.Big_Zombie("enemy", 2)
+        new_enemy.range = 1500
+        size = Vector2(40)
+    elif enemy_type > 5:
+        new_enemy = classes.Small_Skeleton("enemy", 2)
+        new_enemy.range = 1500
+        size = Vector2(70, 35)
+    elif enemy_type == 2 or enemy_type == 3 or enemy_type == 4:
+        new_enemy = classes.AnimatableSprite(characters.life_images, characters.life_num_frames, Vector2(16), False, "life")
+        size = Vector2(25)
+    else: 
+        new_enemy = classes.Big_Skeleton("enemy", 2)
+        new_enemy.range = 1500
+        size = Vector2(80, 60)
+
+    # Get random position on outsides of area
+    side = random.randint(1, 4)
+    if side == 1: # Top
+        y = -20
+        x = random.randint(0, 1300)
+    elif side == 2: # Bottom
+        y = 650
+        x = random.randint(0, 1300)
+    elif side == 3: # Left
+        x = 50
+        y = random.randint(0, 700)
+    else: # Right
+        x = 1300
+        y = random.randint(0, 700)
+
+    create_object(new_enemy, Vector2(x, y), size, renderer)

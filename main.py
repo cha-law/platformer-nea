@@ -163,7 +163,7 @@ async def main() -> None:
         async with asyncio.TaskGroup() as attack:
             for object in attack_collisions:
                 if player.playing == "attack" and player.current_frame > 2:
-                    attack.create_task(object.setLives(-1))
+                    attack.create_task(object.set_lives(-1))
                     if object.lives <= 0 and not isinstance(object, classes.Tower):
                         renderer.objects.remove(object)
 
@@ -179,7 +179,7 @@ async def main() -> None:
                     player.change_animation("damage", False)
                     object.change_animation("attack", False)
                     if player.lives > 0:
-                        sound_effects["hurt"].play().set_volume(0.5 * stats.volume)
+                        sound_effects["hurt"].play().set_volume(0.6 * stats.volume)
                     else:
                         sound_effects["death"].play().set_volume(0.8 * stats.volume)
 
@@ -214,6 +214,20 @@ async def main() -> None:
                     
                 if object.collideable:
                     functions.manage_player_colliding(player, object)
+
+        # Boss level check
+        if world == 1 and level == 2 and room == 3:
+            tower = None
+            for obj in renderer.objects:
+                if isinstance(obj, classes.Tower):
+                    tower = obj
+                    if not obj.lives <= 0 and cooldown_timer % 1800 == 0:
+                        functions.spawn_random_enemy(renderer)
+
+            if tower:
+                if tower.lives <= 0:
+                    flag = classes.AnimatableSprite(characters.flag_images, characters.flag_num_frames, Vector2(60), False, "end")
+                    functions.create_object(flag, Vector2(650, 100), Vector2(60), renderer)
 
 
         # Check if player is dead
